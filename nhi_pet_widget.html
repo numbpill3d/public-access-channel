@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NHI Digital Pet — Ashlander Companion</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            font-family: 'MS Gothic', 'MS UI Gothic', monospace;
+            color: #fff;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+        #pet-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            height: 320px;
+            z-index: 9999;
+        }
+        #pet-info {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 8px 0;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #da70d6;
+            text-shadow: 0 0 5px #da70d6, 0 0 10px #da70d6;
+            z-index: 10;
+        }
+        #mood-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 6px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 3px;
+            overflow: hidden;
+            z-index: 10;
+        }
+        #mood-fill {
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(90deg, #da70d6, #ff69b4);
+            transition: width 0.5s, background 0.5s;
+        }
+        canvas { display: block; }
+
+        /* Occult-style tooltip */
+        #occult-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 0, 8, 0.85);
+            border: 1px solid #8b008b;
+            padding: 4px 8px;
+            font-size: 9px;
+            color: #ff69b4;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 9;
+        }
+    </style>
+</head>
+<body>
+    <div id="pet-container">
+        <div id="pet-info">NHI-∞ Companion</div>
+        <div id="mood-indicator"><div id="mood-fill"></div></div>
+        <div id="occult-tooltip">Interact</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+    // ═══════════════════════════════════════════════════════════════
+    // NHI Digital Pet Widget — Morrowind/Occult/NHI Low-Poly Companion
+    // ═══════════════════════════════════════════════════════════════
+
+    class NHIPet {
+        constructor() {
+            this.container = document.getElementById('pet-container');
+            this.width = this.container.clientWidth;
+            this.height = this.container.clientHeight;
+
+            // Mood system: idle → curious → happy → excited → sleepy → idle
+            this.mood = 'idle';
+            this.moodTimer = 0;
+            this.moodDuration = 15000; // 15s per mood cycle if untouched
+
+            // Mood definitions — colors and behaviors inspired by Morrowind/occult/NHI
+            this.moods = {
+                idle:      { color: 0x8b008b, eyeColor: 0x4b0082,  runeColor: 0x4b0082, pulseSpeed: 0.5,   floatSpeed: 0.3,  label: 'Dormant' },
+                curious:   { color: 0xda70d6, eyeColor: 0xda70d6,  runeColor: 0xda70d6, pulseSpeed: 1.2,   floatSpeed: 0.8,  label: 'Observing' },
+                happy:     { color: 0xff69b4, eyeColor: 0xff69b4,  runeColor: 0xff69b4, pulseSpeed: 2.0,   floatSpeed: 1.0,  label: 'Content' },
+                excited:   { color: 0xff0000, eyeColor: 0xff0066,  runeColor: 0xff0066, pulseSpeed: 4.0,   floatSpeed: 2.0,  label: 'Ecstatic' },
+                sleepy:    { color: 0x666666, eyeColor: 0x333333,  runeColor: 0x555555, pulseSpeed: 0.2,    floatSpeed: 0.1,  label: 'Resting' },
+                hungry:    { color: 0x8b4513, eyeColor: 0xa0522d,  runeColor: 0x8b4513, pulseSpeed: 1.5,   floatSpeed: 0.5,  label: 'Starving' },
+            };
+
+            // Starvation system: pet gets hungry if not interacted with
+            this.lastInteraction = Date.now();
+            this.hungerThreshold = 30000; // 30s without interaction → hungry
+            this.starveThreshold = 60000; // 60s without interaction → sleepy
+
+            // Mouse tracking
+            this.mouseX = 0;
+            this.mouseY = 0;
+            this.mouseNear = false;
+
+            // Initialize Three.js scene
+            this.initScene();
+            this.createPet();
+            this.bindEvents();
+            this.animate();
+        }
+
+        initScene() {
+            // Scene
+            this.scene = new THREE.Scene();
+            this.scene.background = null; // Transparent for embedding
+
+            // Camera — slightly elevated, isometric view
+            this.camera = new THREE.PerspectiveCamera(
+                30, this.width / this.height, 0.1, 1000
+            );
+            this.camera.position.set(0, 1.5, 4);
+            this.camera.lookAt(0, 0, 0);
+
+            // Renderer
+            this.renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                alpha: true,
+                powerPreference: 'low-power'
+            });
+            this.renderer.setPixelRatio(window.devicePixelRatio);
+            this.renderer.setSize(this.width, this.height);
+            this.renderer.shadowMap.enabled = false;
+            this.container.appendChild(this.renderer.domElement);
+
+            // Lighting — purple-tinted ambient + directional
+            const ambient = new THREE.AmbientLight(0x404040, 1.2);
+            this.scene.add(ambient);
+
+            const dirLight = new THREE.DirectionalLight(0xff69b4, 0.6);
+            dirLight.position.set(3, 5, 3);
+            this.scene.add(dirLight);
+
+            // Rim light for ethereal glow
+            const rimLight = new THREE.DirectionalLight(0x8b008b, 0.4);
+            rimLight.position.set(-3, -2, -3);
+            this.scene.add(rimLight);
+
+            // Group to hold all pet parts
+            this.petGroup = new THREE.Group();
+            this.scene.add(this.petGroup);
+
+            // Particle background (occult symbols floating behind)
+            this.createAmbientParticles();
+        }
+
+        createPet() {
+            const mood = this.moods[this.mood];
+
+            // ═══ BODY — low-poly elongated ellipsoid ═══
+            const bodyGeo = new THREE.IcosahedronGeometry(0.8, 1, 2);
+            const bodyMat = new THREE.MeshBasicMaterial({
+                color: mood.color,
+                wireframe: false,
+                flatShading: true,
+            });
+            // Stretch vertically for elongated NHI silhouette
+            bodyGeo.scale(1, 1.4, 0.7);
+            this.body = new THREE.Mesh(bodyGeo, bodyMat);
+            this.body.position.set(0, 0, 0);
+            this.petGroup.add(this.body);
+
+            // ═══ CORE ORB — glowing central orb ═══
+            const coreGeo = new THREE.IcosahedronGeometry(0.25, 1, 1);
+            this.coreMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff0000,
+                wireframe: false,
+                transparent: true,
+                opacity: 0.9,
+            });
+            this.core = new THREE.Mesh(coreGeo, this.coreMaterial);
+            this.core.position.set(0, 0.3, 0);
+            this.body.add(this.core);
+
+            // ═══ EYES — three floating orbs (NHI has no face, just eye-sensors) ═══
+            this.eyeMeshes = [];
+            const eyeGeo = new THREE.SphereGeometry(0.18, 8, 6);
+            const eyeOffsets = [
+                { x: -0.35, y: 0.35, z: 0.55 },   // left eye
+                { x:  0.35, y: 0.35, z: 0.55 },   // right eye
+                { x:     0, y: 0.45, z: 0.4 },     // center eye (NHI trait)
+            ];
+
+            for (let i = 0; i < 3; i++) {
+                const eyeMat = new THREE.MeshBasicMaterial({
+                    color: mood.eyeColor,
+                    transparent: true,
+                    opacity: 0.85,
+                });
+                const eye = new THREE.Mesh(eyeGeo, eyeMat);
+                eye.position.set(eyeOffsets[i].x, eyeOffsets[i].y, eyeOffsets[i].z);
+                this.eyeMeshes.push({ mesh: eye, offset: eyeOffsets[i], blinkPhase: Math.random() * Math.PI * 2 });
+                this.body.add(eye);
+            }
+
+            // ═══ TENTACLE-LIMBS — thin tetrahedral appendages ═══
+            this.tentacles = [];
+            const tentGeo = new THREE.ConeGeometry(0.08, 1.2, 5, 1);
+            for (let i = 0; i < 4; i++) {
+                const t = new THREE.Mesh(tentGeo, bodyMat.clone());
+                const angle = (i / 4) * Math.PI * 2;
+                t.position.set(
+                    Math.cos(angle) * 0.55,
+                    -0.5,
+                    Math.sin(angle) * 0.55
+                );
+                t.rotation.z = angle + Math.PI / 2;
+                this.tentacles.push({
+                    mesh: t,
+                    angle: angle,
+                    baseAngle: angle,
+                    phase: Math.random() * Math.PI * 2,
+                });
+                this.body.add(t);
+            }
+
+            // ═══ ANTENNAE — tall spires with glowing tips (occult/NHI) ═══
+            this.antennae = [];
+            const antenGeo = new THREE.CylinderGeometry(0.03, 0.03, 1.0, 6);
+            const antenMat = new THREE.MeshBasicMaterial({
+                color: 0x8b008b,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.7,
+            });
+            for (let i = -1; i <= 1; i += 2) {
+                const a = new THREE.Mesh(antenGeo, antenMat.clone());
+                a.position.set(i * 0.35, 0.9, 0);
+                a.rotation.z = i * 0.3;
+
+                // Glowing orb at tip
+                const tipGeo = new THREE.IcosahedronGeometry(0.12, 0, 1);
+                const tipMat = new THREE.MeshBasicMaterial({
+                    color: 0xff69b4,
+                    transparent: true,
+                    opacity: 0.9,
+                });
+                const tip = new THREE.Mesh(tipGeo, tipMat);
+                tip.position.y = 0.5;
+                a.add(tip);
+
+                this.antennae.push({ mesh: a, tip: tip, sway: Math.random() });
+                this.body.add(a);
+            }
+
+            // ═══ RUNE SIGNS — floating translucent planes with sigil-like patterns ═══
+            this.runes = [];
+            for (let i = 0; i < 6; i++) {
+                const r = this.createRune();
+                const angle = (i / 6) * Math.PI * 2;
+                const radius = 1.3 + Math.random() * 0.3;
+                r.position.set(
+                    Math.cos(angle) * radius,
+                    Math.sin(angle * 0.7) * 0.5,
+                    Math.sin(angle) * radius
+                );
+                r.userData = { angle, radius, phase: Math.random() * Math.PI * 2 };
+                this.petGroup.add(r);
+                this.runes.push(r);
+            }
+
+            // ═══ ASH PARTICLES — drifting around the pet (Morrowind ash) ═══
+            this.createAshParticles();
+        }
+
+        createRune() {
+            // Low-poly sigil plane using a custom geometry
+            const geo = new THREE.BufferGeometry();
+            const verts = new Float32Array([
+                // A simple occult sigil shape (triangle with eye)
+                -0.15, -0.15, 0,   // bottom-left
+                 0.15, -0.15, 0,   // bottom-right
+                 0,     0.15, 0,   // top
+                // Eye (small circle made of lines)
+                -0.05, 0.02, 0,    // eye left
+                 0.05, 0.02, 0,    // eye right
+                 0,   -0.02, 0,    // eye bottom
+            ]);
+            const indices = [0, 2, 1, 3, 5, 4, 3, 4, 5];
+            geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+            geo.setIndex(indices);
+
+            const mat = new THREE.MeshBasicMaterial({
+                color: this.moods[this.mood].runeColor,
+                transparent: true,
+                opacity: 0.4,
+                wireframe: true,
+                depthWrite: false,
+            });
+            return new THREE.Mesh(geo, mat);
+        }
+
+        createAmbientParticles() {
+            const geo = new THREE.BufferGeometry();
+            const count = 50;
+            const positions = new Float32Array(count * 3);
+            for (let i = 0; i < count; i++) {
+                positions[i * 3] = (Math.random() - 0.5) * 8;
+                positions[i * 3 + 1] = (Math.random() - 0.5) * 8;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 8;
+            }
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const mat = new THREE.PointsMaterial({
+                color: 0x8b008b,
+                size: 0.03,
+                transparent: true,
+                opacity: 0.3,
+                sizeAttenuation: false,
+            });
+            this.ambientParticles = new THREE.Points(geo, mat);
+            this.scene.add(this.ambientParticles);
+        }
+
+        createAshParticles() {
+            const geo = new THREE.BufferGeometry();
+            const count = 30;
+            const positions = new Float32Array(count * 3);
+            const offsets = [];
+            for (let i = 0; i < count; i++) {
+                positions[i * 3]     = (Math.random() - 0.5) * 2;
+                positions[i * 3 + 1] = (Math.random() - 0.5) * 2 + 0.5;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 2;
+                offsets.push({
+                    x: (Math.random() - 0.5) * 0.005,
+                    y: -Math.random() * 0.01 - 0.002,
+                    z: (Math.random() - 0.5) * 0.005,
+                });
+            }
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const mat = new THREE.PointsMaterial({
+                color: 0x8b4513,
+                size: 0.08,
+                transparent: true,
+                opacity: 0.5,
+                sizeAttenuation: false,
+            });
+            this.ashParticles = new THREE.Points(geo, mat);
+            this.ashOffsets = offsets;
+            this.petGroup.add(this.ashParticles);
+        }
+
+        bindEvents() {
+            // Mouse tracking (normalized -1 to 1)
+            this.container.addEventListener('mousemove', (e) => {
+                const rect = this.container.getBoundingClientRect();
+                this.mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                this.mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+                const dist = Math.sqrt(this.mouseX * this.mouseX + this.mouseY * this.mouseY);
+                this.mouseNear = dist < 0.5;
+
+                this.lastInteraction = Date.now();
+                this.interact();
+            });
+
+            // Click = pet the creature (cycle mood)
+            this.container.addEventListener('click', (e) => {
+                this.cycleMood();
+                this.spawnClickEffect(e);
+            });
+
+            // Handle resize
+            window.addEventListener('resize', () => {
+                this.width = this.container.clientWidth;
+                this.height = this.container.clientHeight;
+                this.camera.aspect = this.width / this.height;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(this.width, this.height);
+            });
+        }
+
+        interact() {
+            if (this.mood === 'sleepy' || this.mood === 'idle') {
+                this.setMood('curious');
+            }
+            this.updateMoodIndicator();
+        }
+
+        cycleMood() {
+            const moodOrder = ['idle', 'curious', 'happy', 'excited', 'sleepy'];
+            let idx = moodOrder.indexOf(this.mood);
+            if (idx === -1 || this.mood === 'hungry' || this.mood === 'sleepy') {
+                idx = 0;
+            } else {
+                idx = (idx + 1) % moodOrder.length;
+            }
+            this.setMood(moodOrder[idx]);
+            this.showTooltip(`Mood: ${this.moods[moodOrder[idx]].label}`);
+        }
+
+        setMood(newMood) {
+            this.mood = newMood;
+            this.moodTimer = Date.now();
+            this.applyMood();
+            this.updateMoodIndicator();
+        }
+
+        applyMood() {
+            const mood = this.moods[this.mood];
+
+            // Update body color (morphing via material)
+            this.body.material.color.setHex(mood.color);
+
+            // Update eye colors
+            this.eyeMeshes.forEach(eye => {
+                eye.mesh.material.color.setHex(mood.eyeColor);
+            });
+
+            // Update rune colors
+            this.runes.forEach(rune => {
+                rune.material.color.setHex(mood.runeColor);
+            });
+
+            // Update core orb color
+            this.coreMaterial.color.setHex(mood.eyeColor);
+
+            // Update ambient particles
+            this.ambientParticles.material.color.setHex(mood.runeColor);
+        }
+
+        updateMoodIndicator() {
+            const fill = document.getElementById('mood-fill');
+            const info = document.getElementById('pet-info');
+            const mood = this.moods[this.mood];
+
+            // Mood bar fill
+            const fillPercents = {
+                idle: 50, curious: 70, happy: 85, excited: 100, sleepy: 20, hungry: 10
+            };
+            fill.style.width = `${fillPercents[this.mood]}%`;
+            fill.style.background = `linear-gradient(90deg, ${mood.color.toString(16)}, ${mood.runeColor.toString(16)})`;
+
+            // Info text
+            info.textContent = `${this.mood.toUpperCase()} — ${mood.label}`;
+            info.style.color = mood.eyeColor === 0x4b0082 ? '#ccc' : '#' + mood.color.toString(16);
+        }
+
+        showTooltip(text) {
+            const tooltip = document.getElementById('occult-tooltip');
+            tooltip.textContent = text;
+            tooltip.style.opacity = '1';
+            setTimeout(() => { tooltip.style.opacity = '0'; }, 2000);
+        }
+
+        spawnClickEffect(e) {
+            // Create temporary glowing particles at click position
+            const rect = this.container.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+            const geo = new THREE.BufferGeometry();
+            const positions = new Float32Array(9);
+            for (let i = 0; i < 3; i++) {
+                positions[i * 3]     = x * 2 + (Math.random() - 0.5) * 0.3;
+                positions[i * 3 + 1] = y * 2 + (Math.random() - 0.5) * 0.3;
+                positions[i * 3 + 2] = 0.5 + (Math.random() - 0.5) * 0.3;
+            }
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const mat = new THREE.PointsMaterial({
+                color: 0xff69b4,
+                size: 0.15,
+                transparent: true,
+                opacity: 0.8,
+                sizeAttenuation: false,
+            });
+            const particles = new THREE.Points(geo, mat);
+            this.scene.add(particles);
+
+            // Fade and remove
+            let opacity = 0.8;
+            const fade = () => {
+                opacity -= 0.05;
+                mat.opacity = opacity;
+                particle.scale.multiplyScalar(1.05);
+                if (opacity > 0) {
+                    requestAnimationFrame(fade);
+                } else {
+                    this.scene.remove(particles);
+                    geo.dispose();
+                    mat.dispose();
+                }
+            };
+            const particle = particles;
+            fade();
+        }
+
+        animate() {
+            requestAnimationFrame(() => this.animate());
+            this.update();
+            this.renderer.render(this.scene, this.camera);
+        }
+
+        update() {
+            const time = Date.now() * 0.001;
+            const mood = this.moods[this.mood];
+
+            // ─── Idle float animation ──
+            this.petGroup.position.y = Math.sin(time * mood.floatSpeed * 0.5) * 0.05;
+            this.petGroup.rotation.y = Math.sin(time * mood.floatSpeed * 0.2) * 0.1;
+
+            // ─── Body pulsing ──
+            const pulse = 1 + Math.sin(time * mood.pulseSpeed) * 0.02;
+            this.body.scale.set(pulse, pulse, pulse);
+
+            // ─── Core orb pulsing ──
+            const corePulse = 0.8 + Math.sin(time * mood.pulseSpeed * 1.5) * 0.2;
+            this.coreMaterial.opacity = corePulse * 0.6 + 0.4;
+
+            // ─── Eye movement: follow mouse ──
+            this.eyeMeshes.forEach((eye, i) => {
+                // Eyes blink independently (especially in sleepy mood)
+                const blinkSpeed = mood.pulseSpeed * 0.3;
+                const blinkPhase = time * blinkSpeed + eye.blinkPhase;
+                const blink = Math.abs(Math.sin(blinkPhase));
+                const scale = 1 - blink * 0.02 * (this.mood === 'sleepy' ? 0.8 : 0.3);
+                eye.mesh.scale.set(scale, scale, scale);
+
+                // Eyes look toward mouse (if pet is curious/happy/excited)
+                if (this.mouseNear || ['curious', 'happy', 'excited'].includes(this.mood)) {
+                    eye.mesh.position.x = eye.offset.x + this.mouseX * 0.1;
+                    eye.mesh.position.y = eye.offset.y + this.mouseY * 0.1;
+                } else {
+                    // Return to base position
+                    eye.mesh.position.x = eye.mesh.position.x * 0.9 + eye.offset.x * 0.1;
+                    eye.mesh.position.y = eye.mesh.position.y * 0.9 + eye.offset.y * 0.1;
+                }
+            });
+
+            // ─── Tentacle swaying ──
+            this.tentacles.forEach((t, i) => {
+                const wave = Math.sin(time * mood.floatSpeed * 0.8 + i * 1.5) * 0.15;
+                t.mesh.rotation.z = t.baseAngle + Math.PI / 2 + wave;
+            });
+
+            // ─── Antennae swaying ──
+            this.antennae.forEach((a, i) => {
+                a.mesh.rotation.z = Math.sin(time * mood.floatSpeed + i * 2) * 0.1 + (i === 0 ? 0.3 : -0.3);
+                a.tip.material.opacity = 0.6 + Math.sin(time * mood.pulseSpeed * 2 + i) * 0.3;
+            });
+
+            // ─── Runes orbiting ═─
+            this.runes.forEach((rune, i) => {
+                const rDist = rune.userData.radius;
+                rune.position.x = Math.cos(time * 0.2 + rune.userData.phase) * rDist;
+                rune.position.z = Math.sin(time * 0.2 + rune.userData.phase) * rDist;
+                rune.position.y = Math.sin(time * 0.3 + rune.userData.phase) * 0.3;
+                rune.rotation.y = time * 0.5;
+                rune.rotation.x = time * 0.3;
+            });
+
+            // ─══ Ambient particle rotation ═─
+            if (this.ambientParticles) {
+                this.ambientParticles.rotation.y = time * 0.05;
+                this.ambientParticles.rotation.z = time * 0.03;
+            }
+
+            // ─══ Ash particles drifting ═─
+            const ashPos = this.ashParticles.geometry.attributes.position.array;
+            for (let i = 0; i < ashPos.length / 3; i++) {
+                ashPos[i * 3]     += this.ashOffsets[i].x;
+                ashPos[i * 3 + 1] += this.ashOffsets[i].y;
+                ashPos[i * 3 + 2] += this.ashOffsets[i].z;
+
+                // Reset if fallen too far
+                if (ashPos[i * 3 + 1] < -1.5) {
+                    ashPos[i * 3]     = (Math.random() - 0.5) * 2;
+                    ashPos[i * 3 + 1] = 1.5;
+                    ashPos[i * 3 + 2] = (Math.random() - 0.5) * 2;
+                }
+            }
+            if (this.ashParticles) {
+                this.ashParticles.geometry.attributes.position.needsUpdate = true;
+            }
+
+            // ─══ Starvation / mood decay ┐──
+            const timeSinceInteract = Date.now() - this.lastInteraction;
+            if (timeSinceInteract > this.starveThreshold && this.mood !== 'sleepy' && this.mood !== 'hungry') {
+                this.setMood('hungry');
+                this.showTooltip('Feed me... click to interact');
+            } else if (timeSinceInteract > this.hungerThreshold && this.mood === 'idle') {
+                this.setMood('sleepy');
+            }
+
+            // Auto-cycle mood back to idle from excited/happy after some time
+            if (['happy', 'excited'].includes(this.mood)) {
+                if (timeSinceInteract > 5000) {
+                    this.setMood('idle');
+                }
+            }
+        }
+    }
+
+    // ═══ Boot the pet when page loads ══
+    window.addEventListener('DOMContentLoaded', () => {
+        window.nhiPet = new NHIPet();
+    });
+    </script>
+</body>
+</html>

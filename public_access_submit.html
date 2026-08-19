@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUBLISH TO PUBLIC ACCESS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0008;
+            font-family: 'MS Gothic', 'MS UI Gothic', monospace;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: linear-gradient(145deg, #5d2963, #3a1c3d);
+            border: 4px solid #3a1c3d;
+            border-radius: 6px;
+            box-shadow: 0 0 30px #000, inset 0 0 20px #000;
+            padding: 20px;
+        }
+        h1 {
+            color: #ff69b4;
+            text-align: center;
+            font-size: 16px;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .subtitle {
+            color: #ccc;
+            text-align: center;
+            font-size: 11px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            color: #da70d6;
+            font-size: 12px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        input, select, textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #8b008b;
+            color: #fff;
+            font-family: 'MS Gothic', monospace;
+            font-size: 12px;
+            padding: 8px;
+            border-radius: 2px;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #ff69b4;
+            box-shadow: 0 0 8px #ff69b4;
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .channel-info {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 2px;
+            margin-bottom: 15px;
+            font-size: 11px;
+            color: #ccc;
+        }
+        .channel-info ul { margin-left: 15px; margin-top: 5px; }
+        .channel-info li { margin: 3px 0; }
+        .btn-submit {
+            background: rgba(138, 0, 138, 0.3);
+            border: 2px solid #8b008b;
+            color: #da70d6;
+            padding: 12px 30px;
+            font-family: 'MS Gothic', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+        }
+        .btn-submit:hover {
+            background: rgba(255, 105, 180, 0.3);
+            color: #fff;
+            box-shadow: 0 0 15px #ff69b4;
+        }
+        .instructions {
+            font-size: 10px;
+            color: #888;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 2px solid #8b008b;
+        }
+        .instructions code {
+            color: #0f0;
+            background: #000;
+            padding: 1px 4px;
+            border-radius: 2px;
+        }
+        .preview {
+            margin-top: 15px;
+            background: #000;
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 2px;
+            min-height: 50px;
+        }
+        .preview-label {
+            color: #da70d6;
+            font-size: 11px;
+            margin-bottom: 5px;
+        }
+        .preview-content {
+            color: #ccc;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            max-height: 150px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+        .submit-result {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .submit-result.success { color: #0f0; }
+        .submit-result code {
+            background: #000;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📡 Publish to Public Access</h1>
+        <p class="subtitle">Submit a short HTML program to the broadcasting network</p>
+
+        <div class="channel-info">
+            <strong>Channel Directory:</strong>
+            <ul>
+                <li><span style="color:#8b008b">CH02 JOURNALS</span> — Personal logs, diary entries, thoughts in the dark</li>
+                <li><span style="color:#ff69b4">CH03 ART</span> — Visual works, pixel art, glitch compositions</li>
+                <li><span style="color:#0f0">CH04 COMPUTERS</span> — Code snippets, terminal output, ASCII</li>
+                <li><span style="color:#da70d6">CH07 PERSONAL</span> — About pages, bios, link collections</li>
+                <li><span style="color:#ff0000">CH11 UNKNOWN</span> — Experimental, uncategorized, weird</li>
+            </ul>
+        </div>
+
+        <form id="publish-form">
+            <div class="form-group">
+                <label for="title">Program Title</label>
+                <input type="text" id="title" placeholder="e.g. DAY 47 — STATIC BREACH" maxlength="60" required>
+            </div>
+
+            <div class="form-group">
+                <label for="author">Your Handle / Author Name</label>
+                <input type="text" id="author" placeholder="e.g. anonymous, dead girl, void_coder" maxlength="30" required>
+            </div>
+
+            <div class="form-group">
+                <label for="channel">Target Channel</label>
+                <select id="channel" required>
+                    <option value="2">CH02 — JOURNALS</option>
+                    <option value="3">CH03 — ART</option>
+                    <option value="4">CH04 — COMPUTERS</option>
+                    <option value="7">CH07 — PERSONAL</option>
+                    <option value="11">CH11 — UNKNOWN</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="html">Program Content (HTML)</label>
+                <textarea id="html" placeholder='<div style="color:#fff">Hello, public access.</div>' required></textarea>
+            </div>
+
+            <div class="preview">
+                <div class="preview-label">Preview:</div>
+                <div class="preview-content" id="preview-content">Your HTML will appear here...</div>
+            </div>
+
+            <button type="submit" class="btn-submit">📡 Submit to Channel</button>
+
+            <div class="submit-result" id="submit-result"></div>
+        </form>
+
+        <div class="instructions">
+            <strong>How it works:</strong>
+            <p>Your submission will be manually reviewed and added to the appropriate channel in <code>public_access_channels.js</code>. The homepage auto-rotates through all channels, so your program will appear on the broadcast.</p>
+            <p style="margin-top:8px;">To submit directly: add your program object to the matching channel's <code>programs</code> array in <code>public_access_channels.js</code>, then redeploy.</p>
+            <p style="margin-top:8px;">Each program supports: <code>title</code>, <code>author</code>, <code>html</code>, <code>duration</code> (seconds), <code>color</code> (optional override).</p>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        var form = document.getElementById('publish-form');
+        var preview = document.getElementById('preview-content');
+        var result = document.getElementById('submit-result');
+        var htmlInput = document.getElementById('html');
+
+        // Live preview
+        htmlInput.addEventListener('input', function() {
+            var val = this.value;
+            if (val.trim()) {
+                preview.innerHTML = '<div style="color:#fff">' + val + '</div>';
+            } else {
+                preview.textContent = 'Your HTML will appear here...';
+            }
+        });
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var channelNum = document.getElementById('channel').value;
+            var channelNames = {2:'JOURNALS', 3:'ART', 4:'COMPUTERS', 7:'PERSONAL', 11:'UNKNOWN'};
+            var channelName = channelNames[channelNum];
+
+            var program = {
+                title: document.getElementById('title').value,
+                author: document.getElementById('author').value,
+                channel: parseInt(channelNum),
+                html: document.getElementById('html').value,
+                timestamp: new Date().toISOString()
+            };
+
+            // Try to email or copy to clipboard
+            var submission = JSON.stringify(program, null, 2);
+
+            // Copy to clipboard for manual submission
+            navigator.clipboard.writeText(submission).then(function() {
+                result.className = 'submit-result success';
+                result.innerHTML = '✅ Submission copied to clipboard! Add this to <code>public_access_channels.js</code> in the CH' + channelNum + ' (' + channelName + ') channel.';
+                result.style.display = 'block';
+                form.reset();
+                preview.textContent = 'Your HTML will appear here...';
+            }).catch(function() {
+                // Fallback: show the JSON
+                result.className = 'submit-result success';
+                result.innerHTML = '<pre>' + submission + '</pre><br>Copy the above JSON and add it to the CH' + channelNum + ' (' + channelName + ') channel in <code>public_access_channels.js</code>';
+                result.style.display = 'block';
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NHI Pet — Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            font-family: 'MS Gothic', 'MS UI Gothic', monospace;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        #nhi-pet {
+            width: 400px;
+            height: 400px;
+            position: relative;
+            border: 2px solid #8b008b;
+            border-radius: 8px;
+            background: radial-gradient(circle at center, #0a0008 0%, #000 70%);
+        }
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 11px;
+            color: #ccc;
+            text-align: left;
+            max-width: 280px;
+        }
+        .instructions .hotkey { color: #da70d6; }
+        .instructions .mood { color: #ff69b4; }
+    </style>
+</head>
+<body>
+    <div id="nhi-pet"></div>
+    <div class="instructions">
+        <div><span class="hotkey">MOVE MOUSE</span> — Pet follows cursor (head tracking)</div>
+        <div><span class="hotkey">CLICK</span> — Cycle moods: <span class="mood">idle → curious → happy → excited → sleepy → idle</span></div>
+        <div><span class="hotkey">⚠️ STARVATION</span> — Pet gets hungry if left alone too long</div>
+        <div class="mood">Color palette: Purple/Magenta/Red (Morrowind x Occult x NHI)</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="nhi_pet.js"></script>
+    <script>
+        // Auto-start when Three.js loads
+        var checkTHREE = setInterval(function() {
+            if (typeof THREE !== 'undefined') {
+                clearInterval(checkTHREE);
+                var pet = new NHIPet('#nhi-pet');
+                // Expose for debugging
+                window.pet = pet;
+            }
+        }, 100);
+    </script>
+</body>
+</html>

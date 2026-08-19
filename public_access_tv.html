@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUBLIC ACCESS CHANNEL</title>
+    <meta name="description" content="Tiny website broadcasting network. People publish short pieces of HTML to numbered channels.">
+    <meta name="author" content="nolove / hidden layermedia">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            background: #0a0008;
+            font-family: 'MS Gothic', 'MS UI Gothic', 'Rubik Broken Fax', monospace, cursive;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+        /* ═══ Vintage TV Frame ═══ */
+        .tv-frame {
+            position: relative;
+            max-width: 800px;
+            height: 100%;
+            margin: 0 auto;
+            padding: 16px;
+            background: linear-gradient(145deg, #5d2963, #3a1c3d, #5d2963);
+            border: 6px solid #3a1c3d;
+            border-radius: 6px;
+            box-shadow: 0 0 50px #000, inset 0 0 30px #000;
+        }
+        .tv-frame::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.8) 100%);
+            pointer-events: none;
+        }
+        .tv-logo {
+            position: absolute;
+            top: 6px;
+            left: 12px;
+            font-size: 10px;
+            color: #ccc;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            z-index: 10;
+            text-shadow: 0 0 3px #000;
+        }
+        .tv-logo span { color: #ff0000; }
+
+        /* ═══ Channel Display (like a digital TV) ═══ */
+        .channel-display {
+            position: absolute;
+            top: 28px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #8b008b;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            color: #ff69b4;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 2px;
+            z-index: 10;
+            box-shadow: 0 0 8px #ff69b4;
+        }
+        .channel-display .num {
+            color: #fff;
+            font-weight: bold;
+            text-shadow: 0 0 5px #fff;
+        }
+        .channel-display .name {
+            color: #da70d6;
+            margin-left: 4px;
+        }
+        .channel-display .sig {
+            color: #0f0;
+            font-size: 9px;
+            margin-left: 6px;
+        }
+
+        /* ═══ TV Screen ═══ */
+        .screen {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 80px);
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 50px;
+        }
+        .screen-content {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            padding: 15px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* ═══ Scanlines overlay ═══ */
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255, 255, 255, 0.02) 0px,
+                rgba(255, 255, 255, 0.02) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.4;
+            animation: flicker 0.15s infinite;
+        }
+        @keyframes flicker {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 0.45; }
+        }
+
+        /* ═══ Static overlay ═══ */
+        .static {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: transparent;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+            transition: opacity 0.1s;
+        }
+        .static.active { opacity: 0.3; }
+
+        /* ═══ Rebuffer overlay ═══ */
+        .rebuffer {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            text-align: center;
+            padding-top: 80px;
+            display: none;
+            z-index: 20;
+            letter-spacing: 3px;
+        }
+        .rebuffer .line { display: block; margin: 5px 0; }
+
+        /* ═══ Channel not found ═══ */
+        .channel-not-found {
+            text-align: center;
+            padding: 40px;
+            color: #ff0000;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .channel-not-found .static-msg {
+            font-size: 11px;
+            color: #ccc;
+            margin-top: 15px;
+        }
+
+        /* ═══ Controls ═══ */
+        .controls {
+            position: absolute;
+            bottom: 16px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 15;
+        }
+        .btn {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #8b008b;
+            color: #da70d6;
+            font-family: 'MS Gothic', monospace;
+            font-size: 13px;
+            padding: 8px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 2px;
+            transition: all 0.2s;
+            box-shadow: 0 0 8px rgba(138, 0, 138, 0.5);
+        }
+        .btn:hover {
+            background: rgba(138, 0, 138, 0.3);
+            color: #fff;
+            box-shadow: 0 0 15px #ff69b4;
+            transform: scale(1.05);
+        }
+        .btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 0 4px #fff;
+        }
+        .btn-power {
+            background: #000;
+            border-color: #ff0000;
+            color: #ff0000;
+            position: relative;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            padding: 0;
+        }
+        .btn-power::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            right: 4px;
+            bottom: 4px;
+            background: #ff0000;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ff0000;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Program info */
+        .program-info {
+            position: absolute;
+            bottom: 52px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 11px;
+            color: #ccc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 10;
+        }
+        .program-info .title { color: #da70d6; }
+        .program-info .author { color: #888; }
+
+        /* Navigation dots */
+        .nav-dots {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 15;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(138, 0, 138, 0.3);
+            border: 1px solid #444;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dot.active {
+            background: #ff69b4;
+            border-color: #fff;
+            box-shadow: 0 0 6px #fff;
+        }
+        .dot:hover {
+            background: #da70d6;
+        }
+
+        .controls-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="tv-frame">
+        <div class="tv-logo">PUBLIC <span>ACCESS</span> CHANNELS</div>
+
+        <div class="channel-display">
+            <span class="num">CH02</span>
+            <span class="name">JOURNALS</span>
+            <span class="sig">●●○</span>
+        </div>
+
+        <div class="screen">
+            <div class="screen-content" id="screen-content"></div>
+
+            <div class="scanlines"></div>
+            <div class="static" id="static"></div>
+
+            <div class="rebuffer" id="rebuffer">
+                <span class="line">REBUFFERING...</span>
+                <span class="line">LOADING CHANNEL █</span>
+                <span class="line" style="font-size:10px;">signal_strength: [██████████] 100%</span>
+            </div>
+
+            <div class="channel-not-found" id="not-found" style="display:none;">
+                <div>CHANNEL NOT FOUND</div>
+                <div class="static-msg">The air is silent. Just static.</div>
+            </div>
+        </div>
+
+        <div class="program-info">
+            <span class="title" id="prog-title">--:--</span>
+            <span class="author">by </span><span class="author" id="prog-author">unknown</span>
+        </div>
+
+        <div class="controls">
+            <div class="controls-wrapper">
+                <button class="btn" id="prev-channel">CHANNEL [-]</button>
+                <div class="nav-dots" id="nav-dots"></div>
+                <button class="btn" id="next-channel">CHANNEL [+] </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js for NHI pet (loaded from CDN, same as nolove.neocities.org) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Channel data -->
+    <script src="public_access_channels.js"></script>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // ═══ Channel rotation timer ═══
+        var ROTATION_INTERVAL = 240000;  // 4 minutes (every few minutes)
+        var PROGRAM_DURATION = 40000;   // 40 seconds per program
+        var STATIC_DURATION = 3000;     // 3 seconds of static between programs
+
+        // State
+        var channels = PUBLIC_ACCESS_CHANNELS || [];
+        var currentChannelIndex = 0;
+        var currentProgramIndex = 0;
+        var autoRotateTimer = null;
+        var programTimer = null;
+        var staticTimer = null;
+
+        // DOM elements
+        var $content = document.getElementById('screen-content');
+        var $static = document.getElementById('static');
+        var $rebuffer = document.getElementById('rebuffer');
+        var $channelNum = document.querySelector('.channel-display .num');
+        var $channelName = document.querySelector('.channel-display .name');
+        var $channelSig = document.querySelector('.channel-display .sig');
+        var $progTitle = document.getElementById('prog-title');
+        var $progAuthor = document.getElementById('prog-author');
+        var $navDots = document.getElementById('nav-dots');
+        var $notFound = document.getElementById('not-found');
+        var $prevBtn = document.getElementById('prev-channel');
+        var $nextBtn = document.getElementById('next-channel');
+
+        // ═══ Initialize ═══
+        function init() {
+            createNavDots();
+            bindEvents();
+            startChannel();
+        }
+
+        function createNavDots() {
+            $navDots.innerHTML = '';
+            channels.forEach(function(ch, i) {
+                var dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.dataset.index = i;
+                dot.title = 'CH' + String(ch.num).padStart(2, '0') + ' — ' + ch.name;
+                dot.addEventListener('click', function() {
+                    switchToChannel(i);
+                });
+                $navDots.appendChild(dot);
+            });
+        }
+
+        function bindEvents() {
+            $prevBtn.addEventListener('click', function() {
+                var prev = currentChannelIndex - 1;
+                if (prev < 0) prev = channels.length - 1;
+                switchToChannel(prev);
+            });
+
+            $nextBtn.addEventListener('click', function() {
+                var next = (currentChannelIndex + 1) % channels.length;
+                switchToChannel(next);
+            });
+
+            // Keyboard controls
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '[' || e.key === 'ArrowLeft') {
+                    $prevBtn.click();
+                } else if (e.key === ']' || e.key === 'ArrowRight') {
+                    $nextBtn.click();
+                }
+            });
+        }
+
+        // ═══ Channel switching ═══
+        function startChannel() {
+            // Initial load with rebuffer effect
+            showRebuffer(function() {
+                showChannel(currentChannelIndex);
+                startAutoRotate();
+                startProgramRotation();
+            });
+        }
+
+        function switchToChannel(index) {
+            // Reset program index for new channel
+            currentProgramIndex = 0;
+
+            // Show static then switch
+            showStatic(function() {
+                showChannel(index);
+                startAutoRotate();
+                startProgramRotation();
+            });
+        }
+
+        function startAutoRotate() {
+            // Clear existing timer
+            if (autoRotateTimer) clearInterval(autoRotateTimer);
+
+            // Auto-rotate to next channel every ROTATION_INTERVAL
+            autoRotateTimer = setInterval(function() {
+                currentChannelIndex = (currentChannelIndex + 1) % channels.length;
+                currentProgramIndex = 0;
+                showStatic(function() {
+                    showChannel(currentChannelIndex);
+                    startProgramRotation();
+                });
+            }, ROTATION_INTERVAL);
+        }
+
+        function startProgramRotation() {
+            if (programTimer) clearTimeout(programTimer);
+            if (staticTimer) clearTimeout(staticTimer);
+
+            var ch = channels[currentChannelIndex];
+            if (!ch.programs || ch.programs.length === 0) return;
+            if (ch.programs.length === 1) {
+                // Single program stays until channel rotates
+                return;
+            }
+
+            // Show static then next program
+            staticTimer = setTimeout(function() {
+                showStatic(function() {
+                    currentProgramIndex = (currentProgramIndex + 1) % ch.programs.length;
+                    showProgram(ch, currentProgramIndex);
+                    startProgramRotation();
+                });
+            }, PROGRAM_DURATION);
+        }
+
+        function showStatic(callback) {
+            $static.classList.add('active');
+            // Add random static noise
+            var noise = '';
+            for (var i = 0; i < 2000; i++) {
+                noise += String.fromCharCode(0x2588);
+            }
+            // Actually, let's use CSS animation instead
+
+            setTimeout(function() {
+                $static.classList.remove('active');
+                if (callback) callback();
+            }, STATIC_DURATION);
+        }
+
+        function showRebuffer(callback) {
+            $rebuffer.style.display = 'block';
+            $rebuffer.innerHTML = '<span class="line">PUBLIC ACCESS CHANNEL</span>' +
+                                  '<span class="line">INITIALIZING TRANSMISSION...</span>' +
+                                  '<span class="line">SIGNAL ACQUIRED</span>' +
+                                  '<span class="line" style="font-size:10px;">channel_lock: [██████████] 100%</span>';
+
+            setTimeout(function() {
+                $rebuffer.style.display = 'none';
+                if (callback) callback();
+            }, 2500);
+        }
+
+        // ═══ Display functions ═══
+        function showChannel(index) {
+            var ch = channels[index];
+            currentChannelIndex = index;
+            currentProgramIndex = 0;
+
+            if (!ch) {
+                $notFound.style.display = 'block';
+                $content.innerHTML = '';
+                $channelNum.textContent = 'CH--';
+                $channelName.textContent = 'UNKNOWN';
+                return;
+            }
+            $notFound.style.display = 'none';
+
+            // Update channel display
+            $channelNum.innerHTML = 'CH' + String(ch.num).padStart(2, '0');
+            $channelName.textContent = ch.name;
+            $channelName.style.color = ch.color;
+            $channelSig.innerHTML = getSignalBars(index);
+
+            // Update nav dots
+            updateNavDots();
+
+            // Show current program
+            showProgram(ch, 0);
+        }
+
+        function showProgram(ch, progIndex) {
+            var prog = ch.programs[progIndex];
+            if (!prog) return;
+
+            $progTitle.textContent = prog.title || 'UNTITLED';
+            $progAuthor.textContent = prog.author || 'anonymous';
+
+            // Build content HTML
+            var html = '<div class="program-content">';
+            html += '<div class="program-inner">' + (prog.html || '') + '</div>';
+            html += '</div>';
+
+            // If this program needs Three.js (NHI pet), initialize it
+            if (prog.title && prog.title.indexOf('NHI') >= 0) {
+                html += '<div class="nhi-pet-wrapper" style="margin-top:10px;">';
+                html += '<canvas id="nhi-pet-canvas" style="width:100%;height:280px;"></canvas>';
+                html += '<div style="font-size:9px;color:#888;text-align:center;">[interactive: move mouse, click to cycle moods]</div>';
+                html += '</div>';
+            }
+
+            $content.innerHTML = html;
+
+            // Initialize NHI pet if the canvas is present
+            if (document.getElementById('nhi-pet-canvas') && typeof THREE !== 'undefined') {
+                initNHIPet('nhi-pet-canvas');
+            }
+        }
+
+        function updateNavDots() {
+            var dots = $navDots.querySelectorAll('.dot');
+            dots.forEach(function(dot, i) {
+                dot.classList.toggle('active', i === currentChannelIndex);
+            });
+        }
+
+        function getSignalBars(index) {
+            // Signal strength visualization (like TV bars)
+            var bars = Math.max(1, 5 - Math.floor(index / 2));
+            var sig = '';
+            for (var i = 0; i < 5; i++) {
+                sig += (i < bars) ? '█' : '░';
+            }
+            return sig;
+        }
+
+        // ═══ NHI Pet initialization (for NHI programs) ═══
+        function initNHIPet(canvasId) {
+            // Only initialize once per canvas
+            var canvas = document.getElementById(canvasId);
+            if (!canvas || canvas.dataset.initialized) return;
+            canvas.dataset.initialized = 'true';
+
+            // Use the NHI pet from nhi_pet.js if available, otherwise inline minimal version
+            if (typeof NHIPet !== 'undefined') {
+                // The nhi_pet.js module uses a container selector
+                // Create a wrapper div
+                var wrapper = document.createElement('div');
+                wrapper.id = 'nhi-pet-wrapper';
+                wrapper.style.width = '100%';
+                wrapper.style.height = '100%';
+                canvas.parentNode.insertBefore(wrapper, canvas);
+                wrapper.appendChild(canvas);
+                setTimeout(function() {
+                    new NHIPet('#nhi-pet-wrapper');
+                }, 100);
+            } else {
+                // Inline minimal NHI pet
+                initInlineNHIPet(canvas);
+            }
+        }
+
+        // ═══ Minimal inline NHI pet (fallback if nhi_pet.js not loaded) ═══
+        function initInlineNHIPet(canvas) {
+            if (typeof THREE === 'undefined') return;
+
+            var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+            renderer.setClearColor(0x000000, 0);
+
+            var scene = new THREE.Scene();
+            var camera = new THREE.PerspectiveCamera(30, canvas.width / canvas.height, 0.1, 1000);
+            camera.position.set(0, 1.5, 4);
+
+            var group = new THREE.Group();
+            scene.add(group);
+
+            // Lighting
+            scene.add(new THREE.AmbientLight(0x404040, 1.2));
+            var dl = new THREE.DirectionalLight(0xff69b4, 0.6);
+            dl.position.set(3, 5, 3);
+            scene.add(dl);
+
+            // Body — low-poly icosphere
+            var bodyGeo = new THREE.IcosahedronGeometry(0.8, 1, 2);
+            bodyGeo.scale(1, 1.4, 0.7);
+            var body = new THREE.Mesh(bodyGeo, new THREE.MeshBasicMaterial({
+                color: 0x8b008b, flatShading: true
+            }));
+            group.add(body);
+
+            // Core orb
+            var core = new THREE.Mesh(
+                new THREE.IcosahedronGeometry(0.25, 1, 1),
+                new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.9 })
+            );
+            core.position.set(0, 0.3, 0);
+            body.add(core);
+
+            // Eyes
+            var eyes = [];
+            var eyeGeo = new THREE.SphereGeometry(0.18, 8, 6);
+            var eyeOff = [{x:-0.35,y:0.35,z:0.55},{x:0.35,y:0.35,z:0.55},{x:0,y:0.45,z:0.4}];
+            for (var i = 0; i < 3; i++) {
+                var eye = new THREE.Mesh(eyeGeo, new THREE.MeshBasicMaterial({
+                    color: 0x4b0082, transparent: true, opacity: 0.85
+                }));
+                eye.position.set(eyeOff[i].x, eyeOff[i].y, eyeOff[i].z);
+                eyes.push({ mesh: eye, offset: eyeOff[i], blink: Math.random() * Math.PI * 2 });
+                body.add(eye);
+            }
+
+            // Antennae with tips
+            var antennae = [];
+            var antenGeo = new THREE.CylinderGeometry(0.03, 0.03, 1.0, 6);
+            for (var k = -1; k <= 1; k += 2) {
+                var a = new THREE.Mesh(antenGeo, new THREE.MeshBasicMaterial({
+                    color: 0x8b008b, wireframe: true, transparent: true, opacity: 0.7
+                }));
+                a.position.set(k * 0.35, 0.9, 0);
+                a.rotation.z = k * 0.3;
+                var tip = new THREE.Mesh(
+                    new THREE.IcosahedronGeometry(0.12, 0, 1),
+                    new THREE.MeshBasicMaterial({ color: 0xff69b4, transparent: true, opacity: 0.9 })
+                );
+                tip.position.y = 0.5;
+                a.add(tip);
+                antennae.push({ mesh: a, tip: tip });
+                body.add(a);
+            }
+
+            // Tentacles
+            var tents = [];
+            var tentGeo = new THREE.ConeGeometry(0.08, 1.2, 5, 1);
+            for (var j = 0; j < 4; j++) {
+                var t = new THREE.Mesh(tentGeo, body.material.clone());
+                var ang = (j / 4) * Math.PI * 2;
+                t.position.set(Math.cos(ang) * 0.55, -0.5, Math.sin(ang) * 0.55);
+                t.rotation.z = ang + Math.PI / 2;
+                tents.push({ mesh: t, baseAngle: ang });
+                body.add(t);
+            }
+
+            // Runes
+            var runes = [];
+            for (var r = 0; r < 6; r++) {
+                var rgeo = new THREE.BufferGeometry();
+                var rv = new Float32Array([-0.15,-0.15,0, 0.15,-0.15,0, 0,0.15,0, -0.05,0.02,0, 0.05,0.02,0, 0,-0.02,0]);
+                rgeo.setAttribute('position', new THREE.BufferAttribute(rv, 3));
+                rgeo.setIndex([0,2,1, 3,5,4, 3,4,5]);
+                var rmat = new THREE.MeshBasicMaterial({ color: 0x4b0082, transparent: true, opacity: 0.4, wireframe: true, depthWrite: false });
+                var rune = new THREE.Mesh(rgeo, rmat);
+                var ra = (r / 6) * Math.PI * 2;
+                var rr = 1.3 + Math.random() * 0.3;
+                rune.userData = { phase: Math.random() * Math.PI * 2, radius: rr };
+                group.add(rune);
+                runes.push(rune);
+            }
+
+            // Mouse tracking
+            var mouseX = 0, mouseY = 0, mouseNear = false;
+            canvas.parentElement.addEventListener('mousemove', function(e) {
+                var rect = canvas.getBoundingClientRect();
+                mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                var d = Math.sqrt(mouseX * mouseX + mouseY * mouseY);
+                mouseNear = d < 0.5;
+            });
+
+            // Click to cycle mood
+            var moods = ['idle', 'curious', 'happy', 'excited', 'sleepy'];
+            var moodIdx = 0;
+            canvas.parentElement.addEventListener('click', function() {
+                moodIdx = (moodIdx + 1) % moods.length;
+            });
+
+            // Animate
+            var animate = function() {
+                requestAnimationFrame(animate);
+                var time = Date.now() * 0.001;
+                var mood = moods[moodIdx];
+                var mp = { idle: 0.5, curious: 1.2, happy: 2.0, excited: 4.0, sleepy: 0.2 }[mood];
+
+                group.position.y = Math.sin(time * 0.3) * 0.05;
+                group.rotation.y = Math.sin(time * 0.2) * 0.1;
+
+                var s = 1 + Math.sin(time * mp) * 0.02;
+                body.scale.set(s, s, s);
+                core.material.opacity = 0.4 + Math.sin(time * mp * 1.5) * 0.3;
+
+                for (var i = 0; i < eyes.length; i++) {
+                    var eye = eyes[i];
+                    var blink = Math.abs(Math.sin(time * mp * 0.3 + eye.blink));
+                    var es = 1 - blink * 0.02 * (mood === 'sleepy' ? 0.8 : 0.3);
+                    eye.mesh.scale.set(es, es, es);
+                    if (mouseNear) {
+                        eye.mesh.position.x = eye.offset.x + mouseX * 0.1;
+                        eye.mesh.position.y = eye.offset.y + mouseY * 0.1;
+                    }
+                }
+
+                for (var j = 0; j < tents.length; j++) {
+                    var w = Math.sin(time * 0.8 + j * 1.5) * 0.15;
+                    tents[j].mesh.rotation.z = tents[j].baseAngle + Math.PI / 2 + w;
+                }
+
+                for (var k = 0; k < antennae.length; k++) {
+                    var item = antennae[k];
+                    item.mesh.rotation.z = Math.sin(time + k * 2) * 0.1 + (k === 0 ? 0.3 : -0.3);
+                    if (item.tip) item.tip.material.opacity = 0.6 + Math.sin(time * 2 + k) * 0.3;
+                }
+
+                for (var ri = 0; ri < runes.length; ri++) {
+                    var rune = runes[ri];
+                    var rd = rune.userData.radius;
+                    rune.position.x = Math.cos(time * 0.2 + rune.userData.phase) * rd;
+                    rune.position.z = Math.sin(time * 0.2 + rune.userData.phase) * rd;
+                    rune.position.y = Math.sin(time * 0.3 + rune.userData.phase) * 0.3;
+                }
+
+                renderer.render(scene, camera);
+            };
+            animate();
+        }
+
+        // ═══ Boot ═══
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s';
+            setTimeout(function() {
+                document.body.style.opacity = '1';
+                init();
+            }, 100);
+        });
+    })();
+    </script>
+</body>
+</html>
