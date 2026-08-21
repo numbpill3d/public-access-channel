@@ -22,7 +22,7 @@ python3 -m http.server 8000
 
 Then open <http://localhost:8000>.
 
-You can also just open `index.html` straight from disk (`xdg-open index.html`) — it works, since the only external dependency is Three.js from a CDN.
+You can also just open `index.html` straight from disk (`xdg-open index.html`). The only external dependencies are Three.js and three webfonts, both from CDNs — offline, the set still works and simply falls back to your system monospace.
 
 ## Working the set
 
@@ -30,7 +30,7 @@ It's a television, so you operate it like one. The whole cabinet is live.
 
 | Control | What it does |
 |---|---|
-| **◀ / ▶** buttons, or `←` `→` `[` `]` | Tune down / up a channel |
+| **CH −** / **CH +** buttons, or `←` `→` `[` `]` | Tune down / up a channel |
 | **Preset** buttons (02, 03, 04, 07, 11, 404) | Jump straight to a channel |
 | **POWER**, or `P` | Switch the set off and on — tube collapse, degauss, and warm-up included |
 | **VOLUME** knob — drag it, scroll it, or focus it and use `↑` `↓` | Master volume. Starts at **MUTE** |
@@ -119,7 +119,19 @@ neocities upload index.html public_access_channels.js public_access_submit.html 
 | `nhi_pet_widget.html` | Standalone self-contained pet widget |
 | `nhi_pet_demo.html` | Minimal demo page for the pet |
 
-The look: a dark plastic cabinet with a lit power lamp and a green panel readout, MS Gothic monospace throughout, and a palette of purple `#8b008b`, magenta `#ff69b4`, green `#0f0`, and red `#ff0000`.
+## Type and finish
+
+Three faces, on one rule — **displays glow, plastic is printed, people write by hand**:
+
+| Face | Used for |
+|---|---|
+| **VT323** | Anything that is a display: the picture, the channel badge, the panel readout, the now-playing plate. It's a true monospace, so ASCII-art programs stay aligned |
+| **Silkscreen** | Anything screen-printed on the cabinet: the badge, the panel labels, the button faces |
+| **Permanent Marker** | The masking-tape labels somebody stuck on the set |
+
+Channel numbers are the one thing on the panel that must never be ambiguous, so they use VT323 rather than Silkscreen — a pixel `4` with an open top turns `404` into guesswork.
+
+The finish: dark moulded plastic with scuffs and a scratched top edge, one strip of dark woodgrain veneer across the brow, a lit power lamp, a green panel readout, and a palette of purple `#8b008b`, magenta `#ff69b4`, green `#0f0`, and red `#ff0000`.
 
 ---
 

@@ -6,7 +6,20 @@
     <title>PUBLIC ACCESS CHANNEL</title>
     <meta name="description" content="Tiny website broadcasting network. People publish short pieces of HTML to numbered channels.">
     <meta name="author" content="nolove / hidden layermedia">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Silkscreen:wght@400;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+
     <style>
+        /* Three faces, one rule: displays glow, plastic is printed, people write by hand.
+           VT323 is a true monospace, so ASCII-art programs stay aligned; at 17px it is
+           the same advance width as the 14px monospace it replaces. */
+        :root {
+            --font-screen: 'VT323', 'MS Gothic', monospace;
+            --font-panel: 'Silkscreen', 'VT323', monospace;
+            --font-hand: 'Permanent Marker', 'Bradley Hand', cursive;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { height: 100%; overflow-x: hidden; }
         body {
@@ -16,7 +29,7 @@
             overflow-x: hidden;
             background:
                 radial-gradient(ellipse 80% 60% at 50% 45%, #1a0a1c 0%, #0a0008 60%, #050004 100%);
-            font-family: 'MS Gothic', 'MS UI Gothic', monospace;
+            font-family: var(--font-screen);
             color: #fff;
             display: flex;
             align-items: center;
@@ -75,24 +88,46 @@
                 repeating-linear-gradient(4deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 4px);
         }
 
+        .cabinet { position: relative; }
+
         .cabinet-top {
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: space-between;
-            padding: 0 6px 12px;
-            font-size: 10px;
-            letter-spacing: 1.5px;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 7px 12px 8px;
+            border-radius: 5px;
+            font-family: var(--font-panel);
+            font-size: 11px;
+            letter-spacing: 1px;
+            /* A strip of woodgrain veneer — the one warm surface on the set */
+            background:
+                repeating-linear-gradient(88deg,
+                    rgba(0,0,0,0.3) 0px, rgba(0,0,0,0.07) 1px, rgba(255,190,120,0.028) 2px,
+                    rgba(0,0,0,0.18) 4px, rgba(0,0,0,0.04) 6px, rgba(255,175,105,0.022) 7px,
+                    rgba(0,0,0,0.26) 9px),
+                linear-gradient(92deg, #2e2117, #3f2e20 28%, #271c14 55%, #372820 78%, #221913);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 205, 150, 0.15),
+                inset 0 -2px 6px rgba(0, 0, 0, 0.75),
+                0 1px 0 rgba(255, 225, 200, 0.07);
         }
         .brand {
-            color: #d9c9b8;
-            text-shadow: 0 1px 0 rgba(0,0,0,0.9), 0 -1px 0 rgba(255,255,255,0.16);
-            font-weight: bold;
+            font-family: var(--font-panel);
+            font-weight: 700;
+            font-size: 12px;
+            color: #d9c7b2;
+            /* Screen-printed ink sits *in* the plastic, so it gets a cut shadow */
+            text-shadow: 0 1px 0 rgba(0,0,0,0.95), 0 -1px 0 rgba(255,220,180,0.22);
         }
         .brand span { color: #ff4444; }
         .model-no {
-            color: #8b7d72;
-            font-size: 9px;
-            text-shadow: 0 1px 0 rgba(0,0,0,0.8);
+            font-family: var(--font-panel);
+            color: #b09b86;
+            font-size: 11px;
+            opacity: 0.78;   /* worn away by thirty years of thumbs */
+            text-shadow: 0 1px 0 rgba(0,0,0,0.85);
         }
 
         .cabinet-main {
@@ -147,8 +182,9 @@
             padding: 26px 30px;
             overflow-y: auto;
             overflow-x: hidden;
-            font-size: 14px;
-            line-height: 1.65;
+            font-family: var(--font-screen);
+            font-size: 15px;
+            line-height: 1.45;
             color: #e8e0e8;
             opacity: 0;
             transition: opacity 0.35s ease;
@@ -304,7 +340,8 @@
             top: 20px;
             right: 26px;
             z-index: 16;
-            font-size: 21px;
+            font-family: var(--font-screen);
+            font-size: 28px;
             font-weight: bold;
             letter-spacing: 2px;
             color: #8fffa8;
@@ -334,7 +371,8 @@
             gap: 6px;
             background: rgba(2, 2, 6, 0.9);
             color: #9fe8b0;
-            font-size: 12px;
+            font-family: var(--font-screen);
+            font-size: 16px;
             letter-spacing: 2px;
             text-align: center;
             text-shadow: 0 0 8px rgba(80, 255, 140, 0.6);
@@ -352,7 +390,8 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            font-size: 17px;
+            font-family: var(--font-screen);
+            font-size: 22px;
             letter-spacing: 3px;
             color: #ff6b6b;
             text-shadow: 0 0 10px rgba(255, 60, 60, 0.6);
@@ -388,34 +427,37 @@
             border-radius: 4px;
             background: #0b0d0a;
             box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 235, 215, 0.14);
-            font-size: 9px;
-            line-height: 1.5;
+            font-family: var(--font-screen);
+            font-size: 13px;
+            line-height: 1.35;
             letter-spacing: 1px;
             color: #4a5a48;
             transition: color 0.5s ease;
         }
         .tv-set.is-on .panel-readout { color: #7dffa0; text-shadow: 0 0 6px rgba(80, 255, 130, 0.7); }
-        .panel-readout .ch-num { font-size: 16px; font-weight: bold; display: block; }
-        .panel-readout .ch-name { display: block; font-size: 10px; letter-spacing: 2px; opacity: 0.95; }
-        .panel-readout .sig { letter-spacing: 1px; font-size: 9px; display: block; margin-top: 3px; opacity: 0.8; }
+        .panel-readout .ch-num { font-size: 23px; font-weight: bold; display: block; line-height: 1; }
+        .panel-readout .ch-name { display: block; font-size: 14px; letter-spacing: 2px; opacity: 0.95; }
+        .panel-readout .sig { letter-spacing: 1px; font-size: 13px; display: block; margin-top: 1px; opacity: 0.8; }
 
         .panel-label {
-            font-size: 8px;
-            letter-spacing: 2px;
-            color: #a8998c;
+            font-family: var(--font-panel);
+            font-size: 11px;
+            letter-spacing: 0;
+            color: #b3a598;
             text-align: center;
-            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
-            margin-bottom: -6px;
+            opacity: 0.85;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
+            margin-bottom: -7px;
         }
 
         /* ═══ Physical push-buttons ═══ */
         .btn-row { display: flex; gap: 9px; }
         .pbtn {
             flex: 1;
-            padding: 11px 4px;
-            font-family: inherit;
-            font-size: 13px;
-            font-weight: bold;
+            padding: 12px 4px;
+            font-family: var(--font-panel);
+            font-size: 12px;
+            font-weight: 700;
             color: #e2d6c8;
             cursor: pointer;
             border: none;
@@ -443,9 +485,9 @@
         .power-row { display: flex; align-items: center; gap: 10px; }
         .pbtn-power {
             flex: 1;
-            padding: 10px 4px;
-            font-size: 11px;
-            letter-spacing: 2px;
+            padding: 11px 4px;
+            font-size: 12px;
+            letter-spacing: 1px;
         }
         .power-led {
             width: 11px;
@@ -486,10 +528,10 @@
             inset: 4px;
             border-radius: 50%;
             background: repeating-conic-gradient(
-                rgba(255, 240, 225, 0.11) 0deg 3deg,
-                rgba(0, 0, 0, 0.2) 3deg 6deg
+                rgba(255, 240, 225, 0.13) 0deg 7.5deg,
+                rgba(0, 0, 0, 0.26) 7.5deg 15deg
             );
-            opacity: 0.75;
+            opacity: 0.6;
         }
         .knob-pointer {
             position: absolute;
@@ -504,14 +546,23 @@
             transform-origin: 50% 22px;
         }
         .knob-scale {
-            font-size: 8px;
-            letter-spacing: 1px;
+            font-family: var(--font-panel);
+            font-size: 9px;
+            line-height: 1.7;
+            letter-spacing: 0;
             color: #a8998c;
             text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
             text-align: left;
             line-height: 1.6;
         }
-        .knob-scale b { color: #e8dccc; display: block; font-size: 10px; }
+        .knob-scale b {
+            font-family: var(--font-screen);
+            color: #f4e8d8;
+            display: block;
+            font-size: 17px;
+            line-height: 1;
+            margin-bottom: 3px;
+        }
 
         /* ═══ Slide switch — flyback tone, off by default ═══ */
         .switch-row {
@@ -522,8 +573,10 @@
             padding: 0 2px;
         }
         .switch-row .sw-label {
-            font-size: 8px;
-            letter-spacing: 1px;
+            font-family: var(--font-panel);
+            font-size: 9px;
+            line-height: 1.6;
+            letter-spacing: 0;
             color: #a8998c;
             text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
             line-height: 1.25;
@@ -563,10 +616,11 @@
             gap: 6px;
         }
         .preset {
-            padding: 7px 0;
-            font-family: inherit;
-            font-size: 10px;
-            font-weight: bold;
+            padding: 6px 0 4px;
+            font-family: var(--font-screen);
+            font-size: 17px;
+            font-weight: 400;
+            line-height: 1.1;
             color: #d8ccbe;
             cursor: pointer;
             border: none;
@@ -623,7 +677,8 @@
             border-radius: 3px;
             background: linear-gradient(180deg, #1e1c1b, #141312);
             box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 235, 215, 0.12);
-            font-size: 10px;
+            font-family: var(--font-screen);
+            font-size: 15px;
             letter-spacing: 1px;
             white-space: nowrap;
             overflow: hidden;
@@ -632,15 +687,78 @@
         .program-plate .title { color: #dda0dd; }
         .program-plate .author { color: #7d7d7d; }
 
-        .hint {
-            margin-top: 12px;
+        /* ══════════════════════════════════════════════
+           HANDMADE — masking tape, marker, and honest wear
+           ══════════════════════════════════════════════ */
+        .tape {
+            font-family: var(--font-hand);
+            color: #1c1712;
+            background: linear-gradient(172deg, #9c9179 0%, #8d8369 45%, #7d735c 100%);
+            /* Torn ends, so it reads as a piece someone tore off a roll */
+            clip-path: polygon(
+                3% 0%, 97% 2%, 100% 12%, 96% 26%, 100% 41%, 97% 58%,
+                100% 74%, 96% 88%, 98% 100%, 4% 98%, 0% 86%, 3% 68%,
+                0% 52%, 4% 34%, 0% 18%, 2% 8%
+            );
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+            opacity: 0.82;
+            /* Fibrous paper texture */
+            background-image:
+                repeating-linear-gradient(97deg, rgba(255,255,255,0.16) 0 1px, transparent 1px 3px),
+                repeating-linear-gradient(4deg, rgba(90,70,40,0.09) 0 1px, transparent 1px 4px),
+                linear-gradient(172deg, #9c9179 0%, #8d8369 45%, #7d735c 100%);
+            pointer-events: none;
+            user-select: none;
+        }
+        .tape-panel {
+            margin-top: 10px;
+            padding: 9px 6px 10px;
+            font-size: 13px;
+            line-height: 1.25;
             text-align: center;
-            font-size: 9px;
-            letter-spacing: 1.5px;
-            color: #6d635c;
+            transform: rotate(-1.6deg);
+        }
+        .tape-speaker {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            margin-top: -17px;
+            padding: 5px 9px 6px;
+            font-size: 11px;
+            line-height: 1.15;
+            text-align: center;
+            transform: rotate(-3.2deg);
+        }
+        .speaker { position: relative; }
+
+        /* Scuffs and scratches — thirty years of being shoved around a room */
+        .cabinet-wear {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.5;
+            background:
+                linear-gradient(114deg, transparent 18%, rgba(255,235,210,0.05) 19%, transparent 20%),
+                linear-gradient(97deg, transparent 62%, rgba(255,235,210,0.035) 63%, transparent 64%),
+                linear-gradient(71deg, transparent 41%, rgba(0,0,0,0.16) 42%, transparent 43%),
+                linear-gradient(126deg, transparent 77%, rgba(255,235,210,0.03) 78%, transparent 79%),
+                radial-gradient(ellipse 22% 5% at 82% 96%, rgba(0,0,0,0.22), transparent 70%),
+                radial-gradient(ellipse 14% 4% at 12% 4%, rgba(255,230,200,0.05), transparent 70%);
+        }
+
+        .hint {
+            margin-top: 14px;
+            text-align: center;
+            font-family: var(--font-screen);
+            font-size: 16px;
+            letter-spacing: 1px;
+            color: #7d7168;
         }
         .hint kbd {
-            font-family: inherit;
+            font-family: var(--font-panel);
+            font-size: 10px;
             padding: 1px 5px;
             border-radius: 2px;
             background: #262322;
@@ -694,6 +812,7 @@
 <body>
     <div class="tv-set" id="tv-set">
         <div class="cabinet">
+            <div class="cabinet-wear"></div>
 
             <div class="cabinet-top">
                 <div class="brand">PUBLIC <span>ACCESS</span> CHANNELS</div>
@@ -746,8 +865,8 @@
 
                     <div class="panel-label">CHANNEL</div>
                     <div class="btn-row">
-                        <button class="pbtn" id="prev-channel" aria-label="Previous channel">&#9664;</button>
-                        <button class="pbtn" id="next-channel" aria-label="Next channel">&#9654;</button>
+                        <button class="pbtn" id="prev-channel" aria-label="Previous channel">CH -</button>
+                        <button class="pbtn" id="next-channel" aria-label="Next channel">CH +</button>
                     </div>
 
                     <div class="panel-label">VOLUME</div>
@@ -771,12 +890,18 @@
 
                     <div class="panel-label">PRESET</div>
                     <div class="presets" id="presets"></div>
+
+                    <div class="tape tape-panel">
+                        ch.11 after<br>midnight —<br>trust me
+                    </div>
                 </div>
             </div>
 
             <!-- ═══ Speaker + now-playing plate ═══ -->
             <div class="cabinet-foot">
-                <div class="speaker"></div>
+                <div class="speaker">
+                    <div class="tape tape-speaker">do not<br>adjust</div>
+                </div>
                 <div class="program-plate">
                     <span class="title" id="prog-title">--:--</span>
                     <span class="author"> by </span><span class="author" id="prog-author">unknown</span>
@@ -784,7 +909,7 @@
             </div>
 
             <div class="hint">
-                <kbd>&#8592;</kbd> <kbd>&#8594;</kbd> TUNE &nbsp;·&nbsp; <kbd>P</kbd> POWER &nbsp;·&nbsp; <kbd>M</kbd> MUTE
+                <kbd>L</kbd> <kbd>R</kbd> tune &nbsp;·&nbsp; <kbd>P</kbd> power &nbsp;·&nbsp; <kbd>M</kbd> mute &nbsp;·&nbsp; arrow keys work too
             </div>
         </div>
     </div>
