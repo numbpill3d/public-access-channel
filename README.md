@@ -36,7 +36,7 @@ You can also just open `index.html` straight from disk (`xdg-open index.html`) â
 
 ## The channels
 
-Six channels, currently carrying 12 programs between them.
+Six channels, currently carrying 11 programs between them.
 
 | Channel | Name | Carries |
 |---|---|---|
