@@ -33,7 +33,7 @@ It's a television, so you operate it like one. The whole cabinet is live.
 | **◀ / ▶** buttons, or `←` `→` `[` `]` | Tune down / up a channel |
 | **Preset** buttons (02, 03, 04, 07, 11, 404) | Jump straight to a channel |
 | **POWER**, or `P` | Switch the set off and on — tube collapse, degauss, and warm-up included |
-| **VOLUME** knob — drag, scroll, or `↑` `↓` | Master volume. Starts at **MUTE** |
+| **VOLUME** knob — drag it, scroll it, or focus it and use `↑` `↓` | Master volume. Starts at **MUTE** |
 | `M` | Mute / unmute |
 | **FLYBACK 15.7kHz** switch | Adds the high whine a real CRT makes. Off by default — see below |
 | Nothing at all | The set tunes itself |

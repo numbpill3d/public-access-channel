@@ -8,9 +8,12 @@
     <meta name="author" content="nolove / hidden layermedia">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { height: 100%; }
+        html { height: 100%; overflow-x: hidden; }
         body {
             min-height: 100%;
+            /* The wall glow deliberately overhangs the cabinet; it must not
+               become a horizontal scrollbar */
+            overflow-x: hidden;
             background:
                 radial-gradient(ellipse 80% 60% at 50% 45%, #1a0a1c 0%, #0a0008 60%, #050004 100%);
             font-family: 'MS Gothic', 'MS UI Gothic', monospace;
@@ -663,6 +666,22 @@
             .tube { border-radius: 26px / 20px; }
             .fx-curve, .fx-glare { border-radius: 26px / 20px; }
             .screen-content { padding: 16px 18px; font-size: 13px; }
+
+            /* Fixed-pitch mask over small text washes it out — ease both off */
+            .fx-phosphor { opacity: 0.4; }
+            .fx-scanlines {
+                background: repeating-linear-gradient(
+                    180deg,
+                    rgba(0, 0, 0, 0) 0px,
+                    rgba(0, 0, 0, 0) 1px,
+                    rgba(0, 0, 0, 0.22) 2px,
+                    rgba(0, 0, 0, 0.22) 3px
+                );
+            }
+            .fx-vignette {
+                background: radial-gradient(ellipse 86% 82% at 50% 50%, transparent 52%, rgba(0, 0, 0, 0.42) 86%, rgba(0, 0, 0, 0.8) 100%);
+            }
+            .cabinet-top { flex-direction: column; align-items: flex-start; gap: 2px; }
         }
 
         /* Respect users who don't want motion */
@@ -1265,11 +1284,9 @@
                     CRT.unlock();
                     CRT.playClick();
                     setVolume(CRT.getVolume() > 0 ? 0 : 6);
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault(); CRT.unlock(); setVolume(CRT.getVolume() + 1);
-                } else if (e.key === 'ArrowDown') {
-                    e.preventDefault(); CRT.unlock(); setVolume(CRT.getVolume() - 1);
                 }
+                // Up/down deliberately left alone: they scroll a long program
+                // inside the tube. Volume by keyboard lives on the knob itself.
             });
         }
 
@@ -1315,9 +1332,15 @@
 
             $knob.addEventListener('keydown', function(e) {
                 if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
-                    e.preventDefault(); CRT.unlock(); setVolume(CRT.getVolume() + 1);
+                    e.preventDefault();
+                    // Must not also reach the document handler, or the arrow
+                    // would change channel as well as volume
+                    e.stopPropagation();
+                    CRT.unlock(); setVolume(CRT.getVolume() + 1);
                 } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
-                    e.preventDefault(); CRT.unlock(); setVolume(CRT.getVolume() - 1);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    CRT.unlock(); setVolume(CRT.getVolume() - 1);
                 }
             });
         }
@@ -1461,12 +1484,16 @@
             html += '<div class="program-inner">' + (prog.html || '') + '</div>';
             html += '</div>';
 
-            // If this program needs Three.js (NHI pet), initialize it
-            if (prog.title && prog.title.indexOf('NHI') >= 0) {
+            // NHI programs carry their own <canvas id="nhi-pet-canvas"> in their HTML.
+            // Only supply one if the program didn't bring its own.
+            var wantsPet = prog.title && prog.title.indexOf('NHI') >= 0;
+            if (wantsPet && (prog.html || '').indexOf('nhi-pet-canvas') === -1) {
                 html += '<div class="nhi-pet-wrapper" style="margin-top:10px;">';
-                html += '<canvas id="nhi-pet-canvas" style="width:100%;height:280px;"></canvas>';
-                html += '<div style="font-size:9px;color:#888;text-align:center;">[interactive: move mouse, click to cycle moods]</div>';
+                html += '<canvas id="nhi-pet-canvas" style="width:100%;height:220px;"></canvas>';
                 html += '</div>';
+            }
+            if (wantsPet) {
+                html += '<div style="font-size:9px;color:#888;text-align:center;">[interactive: move mouse, click to cycle moods]</div>';
             }
 
             $content.innerHTML = html;
@@ -1524,7 +1551,9 @@
         function initInlineNHIPet(canvas) {
             if (typeof THREE === 'undefined') return;
 
-            var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            // Draw into the canvas that is actually on the page. Without this the
+            // renderer creates its own detached canvas and the visible one stays black.
+            var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
             canvas.width = canvas.offsetWidth;
             canvas.height = canvas.offsetHeight;
             renderer.setPixelRatio(window.devicePixelRatio);
@@ -1534,6 +1563,9 @@
             var scene = new THREE.Scene();
             var camera = new THREE.PerspectiveCamera(30, canvas.width / canvas.height, 0.1, 1000);
             camera.position.set(0, 1.5, 4);
+            // Without this the camera stares straight down -Z from y=1.5 and the
+            // entity sits half out of frame at the bottom of the canvas
+            camera.lookAt(0, 0.15, 0);
 
             var group = new THREE.Group();
             scene.add(group);
