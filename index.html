@@ -27,14 +27,41 @@
             /* The wall glow deliberately overhangs the cabinet; it must not
                become a horizontal scrollbar */
             overflow-x: hidden;
-            background:
-                radial-gradient(ellipse 80% 60% at 50% 45%, #1a0a1c 0%, #0a0008 60%, #050004 100%);
+            background: #05030a;
             font-family: var(--font-screen);
             color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 24px 16px;
+        }
+
+        /* ══════════════════════════════════════════════
+           BACKDROP — cyclic cellular automaton
+           A coarse grid upscaled by the browser: the maths is trivial,
+           the compositing is the only real cost, so it steps at ~11fps.
+           ══════════════════════════════════════════════ */
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            image-rendering: pixelated;
+            opacity: 0.95;
+        }
+        /* Keeps the cabinet legible against whatever the automaton is doing */
+        .bg-veil {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 78% 72% at 50% 46%,
+                    rgba(5, 3, 10, 0.34) 0%,
+                    rgba(5, 3, 10, 0.55) 46%,
+                    rgba(5, 3, 10, 0.78) 76%,
+                    rgba(5, 3, 10, 0.93) 100%);
         }
 
         /* ══════════════════════════════════════════════
@@ -51,8 +78,7 @@
             content: '';
             position: absolute;
             inset: -8% -6%;
-            background: radial-gradient(ellipse at 42% 44%, rgba(180, 80, 195, 0.13), transparent 52%);
-            filter: blur(38px);
+            background: radial-gradient(ellipse at 42% 44%, rgba(180, 80, 195, 0.16), transparent 58%);
             pointer-events: none;
             z-index: 0;
             opacity: 0;
@@ -810,6 +836,9 @@
     </style>
 </head>
 <body>
+    <canvas id="bg-canvas" width="128" height="72" aria-hidden="true"></canvas>
+    <div class="bg-veil" aria-hidden="true"></div>
+
     <div class="tv-set" id="tv-set">
         <div class="cabinet">
             <div class="cabinet-wear"></div>
@@ -1192,7 +1221,124 @@
             if (raf) { cancelAnimationFrame(raf); raf = null; }
         }
 
+        /* ─────────────────────────────────────────────
+           BACKDROP — cyclic cellular automaton
+
+           Each cell holds a state 0..N-1. A cell advances to the next state
+           when enough of its neighbours are already there. Unlike Life this
+           never stabilises — it self-organises into drifting spirals — which
+           matters for a background, because a frozen one just looks broken.
+           ───────────────────────────────────────────── */
+        var bg = (function() {
+            var cv = document.getElementById('bg-canvas');
+            if (!cv) return { start: function() {}, stop: function() {} };
+            var cx = cv.getContext('2d', { alpha: false });
+            var W = cv.width, H = cv.height;
+            var STATES = 14;
+            var THRESHOLD = 2;
+
+            var cur = new Uint8Array(W * H);
+            var nxt = new Uint8Array(W * H);
+            for (var i = 0; i < cur.length; i++) cur[i] = (Math.random() * STATES) | 0;
+
+            var img = cx.createImageData(W, H);
+            var pal = new Uint8Array(STATES * 3);
+            var raf = null, last = 0, phase = 0, steps = 0;
+            var STEP_MS = 90;   // ~11fps: cheaper, and the spirals read better slow
+
+            /* The gradient the palette is sampled from drifts through these
+               anchors, so the whole field slowly changes character. */
+            var ANCHORS = [
+                [ 42,  10,  72],  [148,  16, 168],   // violet -> magenta
+                [232,  52, 150],  [ 60, 214, 132],   // rose   -> acid green
+                [ 28, 176, 208],  [118,  36, 208],   // teal   -> indigo
+                [206,  60,  78],  [ 52,  22, 118]    // ember  -> deep blue
+            ];
+
+            function lerp(a, b, t) { return a + (b - a) * t; }
+
+            function buildPalette(p) {
+                // Two anchors slide along the ring, and the states ramp between them
+                var n = ANCHORS.length;
+                var f = p * n;
+                var i0 = Math.floor(f) % n;
+                var i1 = (i0 + 1) % n;
+                var i2 = (i0 + 2) % n;
+                var t = f - Math.floor(f);
+                var A = ANCHORS[i0], B = ANCHORS[i1], C = ANCHORS[i2];
+                var from = [lerp(A[0], B[0], t), lerp(A[1], B[1], t), lerp(A[2], B[2], t)];
+                var to   = [lerp(B[0], C[0], t), lerp(B[1], C[1], t), lerp(B[2], C[2], t)];
+                for (var s = 0; s < STATES; s++) {
+                    var u = s / (STATES - 1);
+                    // Gamma keeps the low states genuinely dark so the set stays dominant
+                    var g = Math.pow(u, 1.3);
+                    pal[s * 3]     = lerp(from[0], to[0], u) * g;
+                    pal[s * 3 + 1] = lerp(from[1], to[1], u) * g;
+                    pal[s * 3 + 2] = lerp(from[2], to[2], u) * g;
+                }
+            }
+
+            function step() {
+                for (var y = 0; y < H; y++) {
+                    var yUp = ((y - 1 + H) % H) * W;
+                    var yDn = ((y + 1) % H) * W;
+                    var yMd = y * W;
+                    for (var x = 0; x < W; x++) {
+                        var v = cur[yMd + x];
+                        var want = (v + 1) % STATES;
+                        var xL = (x - 1 + W) % W, xR = (x + 1) % W;
+                        var c = 0;
+                        if (cur[yUp + xL] === want) c++;
+                        if (cur[yUp + x]  === want) c++;
+                        if (cur[yUp + xR] === want) c++;
+                        if (cur[yMd + xL] === want) c++;
+                        if (cur[yMd + xR] === want) c++;
+                        if (cur[yDn + xL] === want) c++;
+                        if (cur[yDn + x]  === want) c++;
+                        if (cur[yDn + xR] === want) c++;
+                        nxt[yMd + x] = (c >= THRESHOLD) ? want : v;
+                    }
+                }
+                var tmp = cur; cur = nxt; nxt = tmp;
+                steps++;
+            }
+
+            function paint() {
+                var d = img.data;
+                for (var i = 0, p = 0; i < cur.length; i++, p += 4) {
+                    var s = cur[i] * 3;
+                    d[p] = pal[s]; d[p + 1] = pal[s + 1]; d[p + 2] = pal[s + 2]; d[p + 3] = 255;
+                }
+                cx.putImageData(img, 0, 0);
+            }
+
+            function frame(ts) {
+                raf = requestAnimationFrame(frame);
+                if (ts - last < STEP_MS) return;
+                last = ts;
+                phase = (phase + 0.00075) % 1;   // a full colour cycle takes a few minutes
+                buildPalette(phase);
+                step();
+                paint();
+            }
+
+            function start() { if (!raf) { last = 0; raf = requestAnimationFrame(frame); } }
+            function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+
+            // Nothing to animate for a tab nobody is looking at
+            document.addEventListener('visibilitychange', function() {
+                document.hidden ? stop() : start();
+            });
+
+            buildPalette(0);
+            paint();
+            return { start: start, stop: stop, steps: function() { return steps; } };
+        })();
+
         return {
+            bgStart: bg.start,
+            bgStop: bg.stop,
+            bgSteps: bg.steps,
             unlock: unlock,
             playStatic: playStatic,
             playClick: playClick,
@@ -1258,6 +1404,7 @@
             createPresets();
             bindEvents();
             setVolume(0);
+            CRT.bgStart();
             // The set switches itself on, the way a TV does when you plug it in.
             // Audio stays muted until the viewer turns the knob (browsers require
             // a gesture before any sound can play at all).
