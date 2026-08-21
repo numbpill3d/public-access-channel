@@ -8,313 +8,764 @@
     <meta name="author" content="nolove / hidden layermedia">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; }
+        html { height: 100%; }
         body {
-            background: #0a0008;
-            font-family: 'MS Gothic', 'MS UI Gothic', 'Rubik Broken Fax', monospace, cursive;
+            min-height: 100%;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 45%, #1a0a1c 0%, #0a0008 60%, #050004 100%);
+            font-family: 'MS Gothic', 'MS UI Gothic', monospace;
             color: #fff;
-            overflow: hidden;
-            height: 100vh;
-        }
-        /* ═══ Vintage TV Frame ═══ */
-        .tv-frame {
-            position: relative;
-            max-width: 800px;
-            height: 100%;
-            margin: 0 auto;
-            padding: 16px;
-            background: linear-gradient(145deg, #5d2963, #3a1c3d, #5d2963);
-            border: 6px solid #3a1c3d;
-            border-radius: 6px;
-            box-shadow: 0 0 50px #000, inset 0 0 30px #000;
-        }
-        .tv-frame::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.8) 100%);
-            pointer-events: none;
-        }
-        .tv-logo {
-            position: absolute;
-            top: 6px;
-            left: 12px;
-            font-size: 10px;
-            color: #ccc;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            z-index: 10;
-            text-shadow: 0 0 3px #000;
-        }
-        .tv-logo span { color: #ff0000; }
-
-        /* ═══ Channel Display (like a digital TV) ═══ */
-        .channel-display {
-            position: absolute;
-            top: 28px;
-            right: 12px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid #8b008b;
-            padding: 4px 12px;
-            font-size: 12px;
-            font-family: 'Courier New', monospace;
-            color: #ff69b4;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border-radius: 2px;
-            z-index: 10;
-            box-shadow: 0 0 8px #ff69b4;
-        }
-        .channel-display .num {
-            color: #fff;
-            font-weight: bold;
-            text-shadow: 0 0 5px #fff;
-        }
-        .channel-display .name {
-            color: #da70d6;
-            margin-left: 4px;
-        }
-        .channel-display .sig {
-            color: #0f0;
-            font-size: 9px;
-            margin-left: 6px;
-        }
-
-        /* ═══ TV Screen ═══ */
-        .screen {
-            position: relative;
-            width: 100%;
-            height: calc(100% - 80px);
-            background: #000;
-            border: 2px solid #333;
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 50px;
-        }
-        .screen-content {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            padding: 15px;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-
-        /* ═══ Scanlines overlay ═══ */
-        .scanlines {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(255, 255, 255, 0.02) 0px,
-                rgba(255, 255, 255, 0.02) 1px,
-                transparent 1px,
-                transparent 3px
-            );
-            pointer-events: none;
-            z-index: 5;
-            opacity: 0.4;
-            animation: flicker 0.15s infinite;
-        }
-        @keyframes flicker {
-            0%, 100% { opacity: 0.35; }
-            50% { opacity: 0.45; }
-        }
-
-        /* ═══ Static overlay ═══ */
-        .static {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: transparent;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 10;
-            transition: opacity 0.1s;
-        }
-        .static.active { opacity: 0.3; }
-
-        /* ═══ Rebuffer overlay ═══ */
-        .rebuffer {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            text-align: center;
-            padding-top: 80px;
-            display: none;
-            z-index: 20;
-            letter-spacing: 3px;
-        }
-        .rebuffer .line { display: block; margin: 5px 0; }
-
-        /* ═══ Channel not found ═══ */
-        .channel-not-found {
-            text-align: center;
-            padding: 40px;
-            color: #ff0000;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        .channel-not-found .static-msg {
-            font-size: 11px;
-            color: #ccc;
-            margin-top: 15px;
-        }
-
-        /* ═══ Controls ═══ */
-        .controls {
-            position: absolute;
-            bottom: 16px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            z-index: 15;
-        }
-        .btn {
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #8b008b;
-            color: #da70d6;
-            font-family: 'MS Gothic', monospace;
-            font-size: 13px;
-            padding: 8px 20px;
-            margin: 0 10px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border-radius: 2px;
-            transition: all 0.2s;
-            box-shadow: 0 0 8px rgba(138, 0, 138, 0.5);
-        }
-        .btn:hover {
-            background: rgba(138, 0, 138, 0.3);
-            color: #fff;
-            box-shadow: 0 0 15px #ff69b4;
-            transform: scale(1.05);
-        }
-        .btn:active {
-            transform: scale(0.97);
-            box-shadow: 0 0 4px #fff;
-        }
-        .btn-power {
-            background: #000;
-            border-color: #ff0000;
-            color: #ff0000;
-            position: relative;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            padding: 0;
-        }
-        .btn-power::after {
-            content: '';
-            position: absolute;
-            top: 4px;
-            left: 4px;
-            right: 4px;
-            bottom: 4px;
-            background: #ff0000;
-            border-radius: 50%;
-            box-shadow: 0 0 8px #ff0000;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        /* Program info */
-        .program-info {
-            position: absolute;
-            bottom: 52px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 11px;
-            color: #ccc;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            z-index: 10;
-        }
-        .program-info .title { color: #da70d6; }
-        .program-info .author { color: #888; }
-
-        /* Navigation dots */
-        .nav-dots {
-            position: absolute;
-            bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 8px;
-            z-index: 15;
-        }
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(138, 0, 138, 0.3);
-            border: 1px solid #444;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .dot.active {
-            background: #ff69b4;
-            border-color: #fff;
-            box-shadow: 0 0 6px #fff;
-        }
-        .dot:hover {
-            background: #da70d6;
-        }
-
-        .controls-wrapper {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
+            padding: 24px 16px;
+        }
+
+        /* ══════════════════════════════════════════════
+           THE SET — physical cabinet
+           ══════════════════════════════════════════════ */
+        .tv-set {
+            width: 100%;
+            max-width: 980px;
+            position: relative;
+        }
+
+        /* Glow the tube throws onto the wall behind the set */
+        .tv-set::before {
+            content: '';
+            position: absolute;
+            inset: -8% -6%;
+            background: radial-gradient(ellipse at 42% 44%, rgba(180, 80, 195, 0.13), transparent 52%);
+            filter: blur(38px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.9s ease;
+        }
+        .tv-set.is-on::before { opacity: 1; }
+
+        .cabinet {
+            position: relative;
+            z-index: 1;
+            padding: 22px 22px 16px;
+            border-radius: 18px 18px 12px 12px;
+            background:
+                linear-gradient(178deg, #56524e 0%, #423e3b 7%, #2e2b29 24%, #262321 58%, #1c1a19 88%, #100f0e 100%);
+            box-shadow:
+                inset 0 2px 0 rgba(255, 225, 200, 0.22),
+                inset 0 -3px 8px rgba(0, 0, 0, 0.75),
+                inset 3px 0 6px rgba(0, 0, 0, 0.4),
+                inset -3px 0 6px rgba(0, 0, 0, 0.4),
+                0 26px 50px rgba(0, 0, 0, 0.85),
+                0 4px 0 #14100f;
+        }
+        /* Injection-moulded plastic speckle */
+        .cabinet::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            opacity: 0.5;
+            background-image:
+                repeating-linear-gradient(94deg, rgba(255,255,255,0.014) 0 2px, transparent 2px 5px),
+                repeating-linear-gradient(4deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 4px);
+        }
+
+        .cabinet-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px 12px;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+        }
+        .brand {
+            color: #d9c9b8;
+            text-shadow: 0 1px 0 rgba(0,0,0,0.9), 0 -1px 0 rgba(255,255,255,0.16);
+            font-weight: bold;
+        }
+        .brand span { color: #ff4444; }
+        .model-no {
+            color: #8b7d72;
+            font-size: 9px;
+            text-shadow: 0 1px 0 rgba(0,0,0,0.8);
+        }
+
+        .cabinet-main {
+            display: flex;
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        /* ══════════════════════════════════════════════
+           BEZEL + TUBE
+           ══════════════════════════════════════════════ */
+        .bezel {
+            flex: 1;
+            min-width: 0;
+            padding: 16px;
+            border-radius: 14px;
+            background: linear-gradient(170deg, #1b1918, #262322 40%, #121110);
+            box-shadow:
+                inset 0 3px 10px rgba(0, 0, 0, 0.95),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.07),
+                0 1px 0 rgba(255, 230, 210, 0.12);
+        }
+
+        .tube {
+            position: relative;
+            aspect-ratio: 4 / 3;
+            width: 100%;
+            overflow: hidden;
+            background: #05060a;
+            /* Real CRT corners: the glass bulges, so the radius is large and uneven */
+            border-radius: 42px / 30px;
+            box-shadow:
+                inset 0 0 26px 12px rgba(0, 0, 0, 0.95),
+                inset 0 0 70px 22px rgba(0, 0, 0, 0.55),
+                0 0 0 2px #0b0909,
+                0 0 22px rgba(160, 70, 180, 0.22);
+            transition: box-shadow 0.6s ease;
+        }
+        .tv-set.is-on .tube {
+            box-shadow:
+                inset 0 0 26px 12px rgba(0, 0, 0, 0.9),
+                inset 0 0 70px 22px rgba(0, 0, 0, 0.5),
+                0 0 0 2px #0b0909,
+                0 0 40px rgba(190, 90, 200, 0.4);
+        }
+
+        /* Content sits at the bottom of the stack and stays interactive */
+        .screen-content {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            padding: 26px 30px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            font-size: 14px;
+            line-height: 1.65;
+            color: #e8e0e8;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            /* Phosphor bloom — text on a CRT never has hard edges */
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.5), 0 0 7px rgba(200, 120, 220, 0.28);
+            scrollbar-width: thin;
+            scrollbar-color: #6b3a72 transparent;
+        }
+        .tv-set.is-on .screen-content { opacity: 1; }
+        .screen-content::-webkit-scrollbar { width: 6px; }
+        .screen-content::-webkit-scrollbar-thumb { background: #6b3a72; border-radius: 3px; }
+        .screen-content::-webkit-scrollbar-track { background: transparent; }
+
+        /* ═══ Effect layers — every one is inert to the pointer ═══ */
+        .fx {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        /* Animated noise, drawn small and upscaled (cheap on integrated GPUs) */
+        #static-canvas {
+            z-index: 6;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            opacity: 0;
+            transition: opacity 0.12s linear;
+            mix-blend-mode: screen;
+        }
+        #static-canvas.active { opacity: 0.95; }
+
+        /* Shadow-mask: the RGB phosphor triads of a real tube */
+        .fx-phosphor {
+            z-index: 10;
+            background-image: repeating-linear-gradient(
+                90deg,
+                rgba(255, 0, 40, 0.055) 0px,
+                rgba(0, 255, 90, 0.045) 1px,
+                rgba(0, 60, 255, 0.055) 2px,
+                rgba(0, 0, 0, 0.11) 3px
+            );
+            background-size: 4px 100%;
+            mix-blend-mode: overlay;
+            opacity: 0.75;
+        }
+
+        /* Scanlines + the slow flicker of a mains-locked refresh */
+        .fx-scanlines {
+            z-index: 11;
+            background: repeating-linear-gradient(
+                180deg,
+                rgba(0, 0, 0, 0) 0px,
+                rgba(0, 0, 0, 0) 1px,
+                rgba(0, 0, 0, 0.42) 2px,
+                rgba(0, 0, 0, 0.42) 3px
+            );
+            animation: flicker 5.5s infinite steps(1);
+        }
+        @keyframes flicker {
+            0%, 92%, 100% { opacity: 0.92; }
+            93% { opacity: 0.78; }
+            94% { opacity: 0.97; }
+            95% { opacity: 0.82; }
+        }
+
+        /* The bright band that rolls up a slightly-out-of-sync picture */
+        .fx-roll {
+            z-index: 12;
+            background: linear-gradient(
+                180deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.035) 42%,
+                rgba(255, 255, 255, 0.075) 50%,
+                rgba(255, 255, 255, 0.035) 58%,
+                transparent 100%
+            );
+            height: 42%;
+            top: -42%;
+            animation: roll 9s linear infinite;
+        }
+        @keyframes roll {
+            0%   { transform: translateY(0); }
+            100% { transform: translateY(340%); }
+        }
+
+        /* Corner darkening from the tube's own geometry */
+        .fx-vignette {
+            z-index: 13;
+            background:
+                radial-gradient(ellipse 78% 74% at 50% 50%, transparent 42%, rgba(0, 0, 0, 0.5) 82%, rgba(0, 0, 0, 0.9) 100%);
+        }
+
+        /* Curved-glass shading: bright at the crown, dark where it turns away */
+        .fx-curve {
+            z-index: 14;
+            border-radius: 42px / 30px;
+            box-shadow:
+                inset 0 0 60px 30px rgba(0, 0, 0, 0.5),
+                inset 0 14px 28px -14px rgba(255, 255, 255, 0.11),
+                inset 0 -14px 28px -14px rgba(255, 255, 255, 0.05);
+        }
+
+        /* Specular reflection off the faceplate */
+        .fx-glare {
+            z-index: 15;
+            background:
+                linear-gradient(148deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.035) 16%, transparent 34%),
+                radial-gradient(ellipse 34% 22% at 26% 15%, rgba(255, 255, 255, 0.07), transparent 70%);
+            border-radius: 42px / 30px;
+            mix-blend-mode: screen;
+        }
+
+        /* Power on/off: the tube collapsing to a line, then a dot */
+        .fx-crush {
+            z-index: 20;
+            background: #000;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        .tv-set.is-on .fx-crush { opacity: 0; }
+        .fx-crush.crushing {
+            opacity: 1;
+            animation: crush 0.55s cubic-bezier(0.5, 0, 0.7, 1) forwards;
+        }
+        @keyframes crush {
+            0%   { clip-path: inset(0 0 0 0); background: #000; }
+            42%  { clip-path: inset(48% 0 48% 0); background: #e8e8ff; }
+            72%  { clip-path: inset(49.6% 34% 49.6% 34%); background: #fff; }
+            100% { clip-path: inset(50% 49.6% 50% 49.6%); background: #fff; }
+        }
+        .fx-crush.booting { animation: uncrush 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) forwards; }
+        @keyframes uncrush {
+            0%   { clip-path: inset(50% 49.6% 50% 49.6%); background: #fff; opacity: 1; }
+            26%  { clip-path: inset(49.4% 8% 49.4% 8%); background: #fff; opacity: 1; }
+            52%  { clip-path: inset(42% 0 42% 0); background: #d8d8f0; opacity: 1; }
+            100% { clip-path: inset(0 0 0 0); background: #000; opacity: 0; }
+        }
+
+        /* Horizontal tearing when the tuner jumps channel */
+        .tube.glitching .screen-content { animation: tear 0.42s steps(3) 1; }
+        @keyframes tear {
+            0%   { transform: translateX(0) skewX(0deg); filter: none; }
+            25%  { transform: translateX(-9px) skewX(-1.6deg); }
+            50%  { transform: translateX(7px) skewX(1.2deg); }
+            75%  { transform: translateX(-3px) skewX(-0.5deg); }
+            100% { transform: translateX(0) skewX(0deg); }
+        }
+
+        /* ═══ On-screen display — drawn by the set, not the channel ═══ */
+        .osd {
+            position: absolute;
+            top: 20px;
+            right: 26px;
+            z-index: 16;
+            font-size: 21px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #8fffa8;
+            text-shadow: 0 0 6px rgba(60, 255, 120, 0.85), 0 0 18px rgba(60, 255, 120, 0.4);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .osd.show { opacity: 1; }
+        .osd .osd-name {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 3px;
+            margin-top: 3px;
+            text-align: right;
+            opacity: 0.85;
+        }
+
+        .rebuffer {
+            position: absolute;
+            inset: 0;
+            z-index: 7;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: rgba(2, 2, 6, 0.9);
+            color: #9fe8b0;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-align: center;
+            text-shadow: 0 0 8px rgba(80, 255, 140, 0.6);
+            pointer-events: none;
+        }
+        .rebuffer.show { display: flex; }
+        .rebuffer .line { display: block; }
+
+        .channel-not-found {
+            position: absolute;
+            inset: 0;
+            z-index: 7;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 17px;
+            letter-spacing: 3px;
+            color: #ff6b6b;
+            text-shadow: 0 0 10px rgba(255, 60, 60, 0.6);
+            pointer-events: none;
+        }
+        .channel-not-found .static-msg {
+            font-size: 11px;
+            color: #888;
+            letter-spacing: 1px;
+            text-shadow: none;
+        }
+
+        /* ══════════════════════════════════════════════
+           CONTROL PANEL — the right-hand column of the set
+           ══════════════════════════════════════════════ */
+        .control-panel {
+            width: 158px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 13px;
+            padding: 14px 12px;
+            border-radius: 12px;
+            background: linear-gradient(168deg, #3e3a37, #2c2927 45%, #1b1918);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 235, 215, 0.2),
+                inset 0 -2px 6px rgba(0, 0, 0, 0.7),
+                0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .panel-readout {
+            padding: 7px 9px;
+            border-radius: 4px;
+            background: #0b0d0a;
+            box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 235, 215, 0.14);
+            font-size: 9px;
+            line-height: 1.5;
+            letter-spacing: 1px;
+            color: #4a5a48;
+            transition: color 0.5s ease;
+        }
+        .tv-set.is-on .panel-readout { color: #7dffa0; text-shadow: 0 0 6px rgba(80, 255, 130, 0.7); }
+        .panel-readout .ch-num { font-size: 16px; font-weight: bold; display: block; }
+        .panel-readout .ch-name { display: block; font-size: 10px; letter-spacing: 2px; opacity: 0.95; }
+        .panel-readout .sig { letter-spacing: 1px; font-size: 9px; display: block; margin-top: 3px; opacity: 0.8; }
+
+        .panel-label {
+            font-size: 8px;
+            letter-spacing: 2px;
+            color: #a8998c;
+            text-align: center;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
+            margin-bottom: -6px;
+        }
+
+        /* ═══ Physical push-buttons ═══ */
+        .btn-row { display: flex; gap: 9px; }
+        .pbtn {
+            flex: 1;
+            padding: 11px 4px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: bold;
+            color: #e2d6c8;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: linear-gradient(180deg, #5b5651 0%, #3e3a37 52%, #2d2a28 100%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 240, 225, 0.4),
+                inset 0 -2px 4px rgba(0, 0, 0, 0.55),
+                0 4px 0 #1f1a19,
+                0 6px 9px rgba(0, 0, 0, 0.6);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+            transition: transform 0.05s linear, box-shadow 0.05s linear;
+        }
+        .pbtn:hover { background: linear-gradient(180deg, #6a645d, #47433f 52%, #35322f 100%); }
+        .pbtn:active, .pbtn.pressed {
+            transform: translateY(4px);
+            box-shadow:
+                inset 0 2px 6px rgba(0, 0, 0, 0.8),
+                0 0 0 #1f1a19,
+                0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        .pbtn:focus-visible { outline: 2px solid #ff69b4; outline-offset: 3px; }
+
+        /* ═══ Power button, with its own indicator lamp ═══ */
+        .power-row { display: flex; align-items: center; gap: 10px; }
+        .pbtn-power {
+            flex: 1;
+            padding: 10px 4px;
+            font-size: 11px;
+            letter-spacing: 2px;
+        }
+        .power-led {
+            width: 11px;
+            height: 11px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #6b2020, #2a0a0a);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 235, 215, 0.16);
+            transition: all 0.4s ease;
+        }
+        .tv-set.is-on .power-led {
+            background: radial-gradient(circle at 35% 30%, #ffdcdc, #ff2d2d 45%, #8b0000);
+            box-shadow: 0 0 8px rgba(255, 60, 60, 0.9), 0 0 16px rgba(255, 40, 40, 0.5);
+        }
+
+        /* ═══ Volume knob — drag or scroll to turn ═══ */
+        .knob-wrap { display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .knob {
+            position: relative;
+            width: 54px;
+            height: 54px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            cursor: grab;
+            background:
+                radial-gradient(circle at 38% 30%, #6e6058 0%, #463c38 45%, #2b2422 78%, #1a1615 100%);
+            box-shadow:
+                inset 0 2px 3px rgba(255, 240, 225, 0.28),
+                inset 0 -3px 6px rgba(0, 0, 0, 0.8),
+                0 4px 8px rgba(0, 0, 0, 0.7);
+            touch-action: none;
+        }
+        .knob:active { cursor: grabbing; }
+        .knob::before {
+            /* Knurled grip ring */
+            content: '';
+            position: absolute;
+            inset: 4px;
+            border-radius: 50%;
+            background: repeating-conic-gradient(
+                rgba(255, 240, 225, 0.11) 0deg 3deg,
+                rgba(0, 0, 0, 0.2) 3deg 6deg
+            );
+            opacity: 0.75;
+        }
+        .knob-pointer {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            width: 3px;
+            height: 17px;
+            margin-left: -1.5px;
+            border-radius: 2px;
+            background: linear-gradient(180deg, #ffeccc, #b89a72);
+            box-shadow: 0 0 4px rgba(255, 220, 160, 0.6);
+            transform-origin: 50% 22px;
+        }
+        .knob-scale {
+            font-size: 8px;
+            letter-spacing: 1px;
+            color: #a8998c;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
+            text-align: left;
+            line-height: 1.6;
+        }
+        .knob-scale b { color: #e8dccc; display: block; font-size: 10px; }
+
+        /* ═══ Slide switch — flyback tone, off by default ═══ */
+        .switch-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 0 2px;
+        }
+        .switch-row .sw-label {
+            font-size: 8px;
+            letter-spacing: 1px;
+            color: #a8998c;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
+            line-height: 1.25;
+        }
+        .switch {
+            position: relative;
+            width: 38px;
+            height: 19px;
+            flex-shrink: 0;
+            cursor: pointer;
+            border: none;
+            border-radius: 3px;
+            padding: 0;
+            background: #14110f;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 235, 215, 0.14);
+        }
+        .switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 15px;
+            border-radius: 2px;
+            background: linear-gradient(180deg, #6b645d, #3a3532);
+            box-shadow: inset 0 1px 0 rgba(255, 240, 225, 0.45), 0 1px 3px rgba(0, 0, 0, 0.8);
+            transition: transform 0.13s ease;
+        }
+        .switch[aria-pressed="true"]::after { transform: translateX(18px); }
+        .switch[aria-pressed="true"] { background: #3d1420; box-shadow: inset 0 2px 5px rgba(0,0,0,0.9), 0 0 7px rgba(255, 80, 120, 0.35); }
+        .switch:focus-visible { outline: 2px solid #ff69b4; outline-offset: 2px; }
+
+        /* ═══ Channel preset buttons ═══ */
+        .presets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        .preset {
+            padding: 7px 0;
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: bold;
+            color: #d8ccbe;
+            cursor: pointer;
+            border: none;
+            border-radius: 3px;
+            background: linear-gradient(180deg, #4e4945 0%, #35322f 100%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 240, 225, 0.3),
+                0 3px 0 #1d1918,
+                0 4px 5px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+            transition: transform 0.05s linear, box-shadow 0.05s linear;
+        }
+        .preset:hover { background: linear-gradient(180deg, #5d5751, #413d39); }
+        .preset:active {
+            transform: translateY(3px);
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), 0 0 0 #1d1918;
+        }
+        .preset.active {
+            color: #0d0d0d;
+            background: linear-gradient(180deg, #ffb0e0, #d060a8);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                0 3px 0 #6b2a52,
+                0 0 12px rgba(255, 105, 180, 0.55);
+        }
+        .preset:focus-visible { outline: 2px solid #ff69b4; outline-offset: 2px; }
+
+        /* ══════════════════════════════════════════════
+           CABINET FOOT — speaker grille + program plate
+           ══════════════════════════════════════════════ */
+        .cabinet-foot {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 14px;
+            padding: 0 4px;
+        }
+        .speaker {
+            flex-shrink: 0;
+            width: 128px;
+            height: 34px;
+            border-radius: 4px;
+            background:
+                repeating-linear-gradient(180deg, #121110 0px, #121110 2px, #34312e 2px, #34312e 4px);
+            box-shadow:
+                inset 0 2px 5px rgba(0, 0, 0, 0.9),
+                0 1px 0 rgba(255, 235, 215, 0.14);
+        }
+        .program-plate {
+            flex: 1;
+            min-width: 0;
+            padding: 6px 12px;
+            border-radius: 3px;
+            background: linear-gradient(180deg, #1e1c1b, #141312);
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 235, 215, 0.12);
+            font-size: 10px;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .program-plate .title { color: #dda0dd; }
+        .program-plate .author { color: #7d7d7d; }
+
+        .hint {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            color: #6d635c;
+        }
+        .hint kbd {
+            font-family: inherit;
+            padding: 1px 5px;
+            border-radius: 2px;
+            background: #262322;
+            color: #a89c92;
+            box-shadow: inset 0 1px 0 rgba(255, 235, 215, 0.14);
+        }
+
+        /* ══════════════════════════════════════════════
+           NARROW SCREENS — panel drops below the tube
+           ══════════════════════════════════════════════ */
+        @media (max-width: 720px) {
+            body { padding: 12px 8px; }
+            .cabinet { padding: 14px 14px 12px; border-radius: 12px; }
+            .cabinet-main { flex-direction: column; gap: 12px; }
+            .bezel { padding: 10px; }
+            .control-panel { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; }
+            .panel-readout { flex: 1 1 100%; text-align: center; }
+            .panel-label { display: none; }
+            .btn-row, .power-row { flex: 1 1 46%; }
+            .knob-wrap { flex: 1 1 46%; }
+            .presets { flex: 1 1 100%; grid-template-columns: repeat(6, 1fr); }
+            .speaker { width: 74px; height: 26px; }
+            .tube { border-radius: 26px / 20px; }
+            .fx-curve, .fx-glare { border-radius: 26px / 20px; }
+            .screen-content { padding: 16px 18px; font-size: 13px; }
+        }
+
+        /* Respect users who don't want motion */
+        @media (prefers-reduced-motion: reduce) {
+            .fx-roll, .fx-scanlines { animation: none; }
+            .tube.glitching .screen-content { animation: none; }
         }
     </style>
 </head>
 <body>
-    <div class="tv-frame">
-        <div class="tv-logo">PUBLIC <span>ACCESS</span> CHANNELS</div>
+    <div class="tv-set" id="tv-set">
+        <div class="cabinet">
 
-        <div class="channel-display">
-            <span class="num">CH02</span>
-            <span class="name">JOURNALS</span>
-            <span class="sig">●●○</span>
-        </div>
-
-        <div class="screen">
-            <div class="screen-content" id="screen-content"></div>
-
-            <div class="scanlines"></div>
-            <div class="static" id="static"></div>
-
-            <div class="rebuffer" id="rebuffer">
-                <span class="line">REBUFFERING...</span>
-                <span class="line">LOADING CHANNEL █</span>
-                <span class="line" style="font-size:10px;">signal_strength: [██████████] 100%</span>
+            <div class="cabinet-top">
+                <div class="brand">PUBLIC <span>ACCESS</span> CHANNELS</div>
+                <div class="model-no">MODEL PAC-11 &nbsp;·&nbsp; SOLID STATE</div>
             </div>
 
-            <div class="channel-not-found" id="not-found" style="display:none;">
-                <div>CHANNEL NOT FOUND</div>
-                <div class="static-msg">The air is silent. Just static.</div>
+            <div class="cabinet-main">
+
+                <!-- ═══ Picture tube ═══ -->
+                <div class="bezel">
+                    <div class="tube" id="tube">
+                        <div class="screen-content" id="screen-content"></div>
+
+                        <canvas id="static-canvas" class="fx" width="160" height="120"></canvas>
+
+                        <div class="rebuffer" id="rebuffer"></div>
+
+                        <div class="channel-not-found" id="not-found">
+                            <div>CHANNEL NOT FOUND</div>
+                            <div class="static-msg">The air is silent. Just static.</div>
+                        </div>
+
+                        <div class="osd" id="osd">
+                            <span class="osd-num">CH02</span>
+                            <span class="osd-name">JOURNALS</span>
+                        </div>
+
+                        <div class="fx fx-phosphor"></div>
+                        <div class="fx fx-scanlines"></div>
+                        <div class="fx fx-roll"></div>
+                        <div class="fx fx-vignette"></div>
+                        <div class="fx fx-curve"></div>
+                        <div class="fx fx-glare"></div>
+                        <div class="fx fx-crush" id="crush"></div>
+                    </div>
+                </div>
+
+                <!-- ═══ Control panel ═══ -->
+                <div class="control-panel">
+                    <div class="panel-readout">
+                        <span class="ch-num" id="ch-num">CH--</span>
+                        <span class="ch-name" id="ch-name">STANDBY</span>
+                        <span class="sig" id="ch-sig">░░░░░</span>
+                    </div>
+
+                    <div class="power-row">
+                        <button class="pbtn pbtn-power" id="power-btn" aria-label="Power">POWER</button>
+                        <div class="power-led" id="power-led"></div>
+                    </div>
+
+                    <div class="panel-label">CHANNEL</div>
+                    <div class="btn-row">
+                        <button class="pbtn" id="prev-channel" aria-label="Previous channel">&#9664;</button>
+                        <button class="pbtn" id="next-channel" aria-label="Next channel">&#9654;</button>
+                    </div>
+
+                    <div class="panel-label">VOLUME</div>
+                    <div class="knob-wrap">
+                        <div class="knob" id="volume-knob" role="slider" tabindex="0"
+                             aria-label="Volume" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+                            <div class="knob-pointer" id="knob-pointer"></div>
+                        </div>
+                        <div class="knob-scale">
+                            <b id="vol-readout">MUTE</b>
+                            drag<br>or scroll
+                        </div>
+                    </div>
+
+                    <div class="switch-row">
+                        <span class="sw-label">FLYBACK<br>15.7kHz</span>
+                        <button class="switch" id="whine-switch" type="button"
+                                aria-pressed="false" aria-label="Flyback tone"
+                                title="The 15.7kHz whine a real CRT makes. Off by default — many people find it painful."></button>
+                    </div>
+
+                    <div class="panel-label">PRESET</div>
+                    <div class="presets" id="presets"></div>
+                </div>
             </div>
-        </div>
 
-        <div class="program-info">
-            <span class="title" id="prog-title">--:--</span>
-            <span class="author">by </span><span class="author" id="prog-author">unknown</span>
-        </div>
+            <!-- ═══ Speaker + now-playing plate ═══ -->
+            <div class="cabinet-foot">
+                <div class="speaker"></div>
+                <div class="program-plate">
+                    <span class="title" id="prog-title">--:--</span>
+                    <span class="author"> by </span><span class="author" id="prog-author">unknown</span>
+                </div>
+            </div>
 
-        <div class="controls">
-            <div class="controls-wrapper">
-                <button class="btn" id="prev-channel">CHANNEL [-]</button>
-                <div class="nav-dots" id="nav-dots"></div>
-                <button class="btn" id="next-channel">CHANNEL [+] </button>
+            <div class="hint">
+                <kbd>&#8592;</kbd> <kbd>&#8594;</kbd> TUNE &nbsp;·&nbsp; <kbd>P</kbd> POWER &nbsp;·&nbsp; <kbd>M</kbd> MUTE
             </div>
         </div>
     </div>
@@ -323,6 +774,298 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- Channel data -->
     <script src="public_access_channels.js"></script>
+
+    <!-- ═══════════════════════════════════════════════════════
+         CRT: the set itself — sound, static, power, tuning feel
+         ═══════════════════════════════════════════════════════ -->
+    <script>
+    window.CRT = (function() {
+        'use strict';
+
+        /* ─────────────────────────────────────────────
+           AUDIO — everything synthesized, no asset files
+           ───────────────────────────────────────────── */
+        var ctx = null;
+        var master = null;       // master volume, driven by the knob
+        var hissGain = null;     // continuous inter-station hiss
+        var whineGain = null;    // 15.7kHz flyback transformer whine
+        var noiseBuf = null;
+        var volume = 0;          // 0..10, starts muted
+        var started = false;
+
+        function ensureContext() {
+            if (ctx) return true;
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return false;
+            ctx = new AC();
+
+            master = ctx.createGain();
+            master.gain.value = 0;
+            master.connect(ctx.destination);
+
+            // Pre-render two seconds of white noise; every static sound reuses it
+            var len = ctx.sampleRate * 2;
+            noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+            var d = noiseBuf.getChannelData(0);
+            for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+
+            return true;
+        }
+
+        // Browsers require a user gesture before audio will start
+        function unlock() {
+            if (!ensureContext()) return;
+            if (ctx.state === 'suspended') ctx.resume();
+            started = true;
+        }
+
+        function now() { return ctx.currentTime; }
+
+        function noiseSource(filterType, freq, q) {
+            var src = ctx.createBufferSource();
+            src.buffer = noiseBuf;
+            src.loop = true;
+            var f = ctx.createBiquadFilter();
+            f.type = filterType || 'bandpass';
+            f.frequency.value = freq || 1000;
+            if (q) f.Q.value = q;
+            src.connect(f);
+            return { src: src, out: f };
+        }
+
+        /* A burst of untuned-channel static */
+        function playStatic(duration) {
+            if (!started || !ctx) return;
+            var n = noiseSource('highpass', 700);
+            var g = ctx.createGain();
+            g.gain.value = 0;
+            n.out.connect(g);
+            g.connect(master);
+
+            var t = now();
+            g.gain.linearRampToValueAtTime(0.32, t + 0.02);
+            g.gain.setValueAtTime(0.32, t + duration - 0.12);
+            g.gain.linearRampToValueAtTime(0, t + duration);
+
+            n.src.start(t);
+            n.src.stop(t + duration + 0.05);
+        }
+
+        /* Mechanical button travel: a click transient plus a body thump */
+        function playClick() {
+            if (!started || !ctx) return;
+            var t = now();
+
+            var n = noiseSource('bandpass', 2600, 1.2);
+            var g = ctx.createGain();
+            g.gain.setValueAtTime(0.5, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.045);
+            n.out.connect(g);
+            g.connect(master);
+            n.src.start(t);
+            n.src.stop(t + 0.06);
+
+            var o = ctx.createOscillator();
+            var og = ctx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(180, t);
+            o.frequency.exponentialRampToValueAtTime(70, t + 0.05);
+            og.gain.setValueAtTime(0.22, t);
+            og.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+            o.connect(og);
+            og.connect(master);
+            o.start(t);
+            o.stop(t + 0.07);
+        }
+
+        /* Heavier throw for the power switch */
+        function playClunk(rising) {
+            if (!started || !ctx) return;
+            var t = now();
+
+            var o = ctx.createOscillator();
+            var og = ctx.createGain();
+            o.type = 'square';
+            o.frequency.setValueAtTime(rising ? 90 : 130, t);
+            o.frequency.exponentialRampToValueAtTime(rising ? 42 : 38, t + 0.09);
+            og.gain.setValueAtTime(0.3, t);
+            og.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+            o.connect(og);
+            og.connect(master);
+            o.start(t);
+            o.stop(t + 0.14);
+
+            var n = noiseSource('lowpass', 900);
+            var g = ctx.createGain();
+            g.gain.setValueAtTime(0.3, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+            n.out.connect(g);
+            g.connect(master);
+            n.src.start(t);
+            n.src.stop(t + 0.09);
+        }
+
+        /* Degauss: the low wobbling hum a tube makes as the coil sweeps */
+        function playDegauss() {
+            if (!started || !ctx) return;
+            var t = now();
+            var o = ctx.createOscillator();
+            var lfo = ctx.createOscillator();
+            var lfoGain = ctx.createGain();
+            var g = ctx.createGain();
+
+            o.type = 'sine';
+            o.frequency.value = 62;
+            lfo.type = 'sine';
+            lfo.frequency.value = 11;
+            lfoGain.gain.value = 26;
+            lfo.connect(lfoGain);
+            lfoGain.connect(o.frequency);
+
+            g.gain.setValueAtTime(0, t);
+            g.gain.linearRampToValueAtTime(0.26, t + 0.05);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.85);
+
+            o.connect(g);
+            g.connect(master);
+            o.start(t); lfo.start(t);
+            o.stop(t + 0.9); lfo.stop(t + 0.9);
+        }
+
+        /* Two-tone confirmation when a channel locks */
+        function playTuneBeep() {
+            if (!started || !ctx) return;
+            var t = now();
+            [[880, 0], [1320, 0.07]].forEach(function(p) {
+                var o = ctx.createOscillator();
+                var g = ctx.createGain();
+                o.type = 'square';
+                o.frequency.value = p[0];
+                g.gain.setValueAtTime(0, t + p[1]);
+                g.gain.linearRampToValueAtTime(0.06, t + p[1] + 0.01);
+                g.gain.exponentialRampToValueAtTime(0.001, t + p[1] + 0.09);
+                o.connect(g);
+                g.connect(master);
+                o.start(t + p[1]);
+                o.stop(t + p[1] + 0.1);
+            });
+        }
+
+        /* Continuous layers that live for as long as the set is on */
+        function startAmbient() {
+            if (!started || !ctx || hissGain) return;
+            var t = now();
+
+            // Faint carrier hiss
+            var n = noiseSource('bandpass', 3800, 0.6);
+            hissGain = ctx.createGain();
+            hissGain.gain.setValueAtTime(0, t);
+            hissGain.gain.linearRampToValueAtTime(0.014, t + 1.2);
+            n.out.connect(hissGain);
+            hissGain.connect(master);
+            n.src.start(t);
+            hissGain._src = n.src;
+
+            // Flyback whine. Real, and genuinely unpleasant to some people —
+            // kept extremely quiet and behind its own toggle.
+            var o = ctx.createOscillator();
+            whineGain = ctx.createGain();
+            o.type = 'sine';
+            o.frequency.value = 15734;   // NTSC horizontal scan rate
+            whineGain.gain.setValueAtTime(0, t);
+            o.connect(whineGain);
+            whineGain.connect(master);
+            o.start(t);
+            whineGain._src = o;
+            whineGain._wanted = false;
+        }
+
+        function stopAmbient() {
+            if (!ctx) return;
+            [hissGain, whineGain].forEach(function(g) {
+                if (!g) return;
+                try {
+                    g.gain.cancelScheduledValues(now());
+                    g.gain.setValueAtTime(g.gain.value, now());
+                    g.gain.linearRampToValueAtTime(0, now() + 0.3);
+                    g._src.stop(now() + 0.35);
+                } catch (e) { /* already stopped */ }
+            });
+            hissGain = null;
+            whineGain = null;
+        }
+
+        function setWhine(on) {
+            if (!whineGain) return;
+            whineGain._wanted = on;
+            whineGain.gain.linearRampToValueAtTime(on ? 0.006 : 0, now() + 0.25);
+        }
+
+        function setVolume(v) {
+            volume = Math.max(0, Math.min(10, v));
+            if (master) {
+                // Perceptual curve — linear gain sounds wrong on a volume control
+                var g = Math.pow(volume / 10, 1.8) * 0.9;
+                master.gain.linearRampToValueAtTime(g, now() + 0.06);
+            }
+            return volume;
+        }
+
+        function getVolume() { return volume; }
+
+        /* ─────────────────────────────────────────────
+           STATIC — small canvas, upscaled by the browser
+           ───────────────────────────────────────────── */
+        var canvas = document.getElementById('static-canvas');
+        var cctx = canvas.getContext('2d', { alpha: true });
+        var raf = null;
+        var imgData = cctx.createImageData(canvas.width, canvas.height);
+
+        function drawNoiseFrame() {
+            var d = imgData.data;
+            for (var i = 0; i < d.length; i += 4) {
+                var v = 62 + ((Math.random() * 194) | 0);
+                // Occasional coloured speckle, the way analogue noise fringes
+                if (v > 246) {
+                    d[i] = 255; d[i + 1] = 120 + ((Math.random() * 100) | 0); d[i + 2] = 255;
+                } else {
+                    d[i] = d[i + 1] = d[i + 2] = v;
+                }
+                d[i + 3] = v > 96 ? 240 : 120;
+            }
+            cctx.putImageData(imgData, 0, 0);
+            raf = requestAnimationFrame(drawNoiseFrame);
+        }
+
+        function staticOn() {
+            canvas.classList.add('active');
+            if (!raf) drawNoiseFrame();
+        }
+
+        function staticOff() {
+            canvas.classList.remove('active');
+            // Stop the loop entirely — no point burning frames behind a hidden layer
+            if (raf) { cancelAnimationFrame(raf); raf = null; }
+        }
+
+        return {
+            unlock: unlock,
+            playStatic: playStatic,
+            playClick: playClick,
+            playClunk: playClunk,
+            playDegauss: playDegauss,
+            playTuneBeep: playTuneBeep,
+            startAmbient: startAmbient,
+            stopAmbient: stopAmbient,
+            setWhine: setWhine,
+            setVolume: setVolume,
+            getVolume: getVolume,
+            staticOn: staticOn,
+            staticOff: staticOff,
+            isAudioReady: function() { return started; }
+        };
+    })();
+    </script>
 
     <script>
     (function() {
@@ -342,58 +1085,239 @@
         var staticTimer = null;
 
         // DOM elements
+        var $set = document.getElementById('tv-set');
+        var $tube = document.getElementById('tube');
         var $content = document.getElementById('screen-content');
-        var $static = document.getElementById('static');
         var $rebuffer = document.getElementById('rebuffer');
-        var $channelNum = document.querySelector('.channel-display .num');
-        var $channelName = document.querySelector('.channel-display .name');
-        var $channelSig = document.querySelector('.channel-display .sig');
+        var $channelNum = document.getElementById('ch-num');
+        var $channelName = document.getElementById('ch-name');
+        var $channelSig = document.getElementById('ch-sig');
         var $progTitle = document.getElementById('prog-title');
         var $progAuthor = document.getElementById('prog-author');
-        var $navDots = document.getElementById('nav-dots');
+        var $presets = document.getElementById('presets');
         var $notFound = document.getElementById('not-found');
         var $prevBtn = document.getElementById('prev-channel');
         var $nextBtn = document.getElementById('next-channel');
+        var $powerBtn = document.getElementById('power-btn');
+        var $crush = document.getElementById('crush');
+        var $osd = document.getElementById('osd');
+        var $knob = document.getElementById('volume-knob');
+        var $knobPointer = document.getElementById('knob-pointer');
+        var $whineSwitch = document.getElementById('whine-switch');
+        var $volReadout = document.getElementById('vol-readout');
+
+        var powered = false;
+        var osdTimer = null;
 
         // ═══ Initialize ═══
         function init() {
-            createNavDots();
+            createPresets();
             bindEvents();
-            startChannel();
+            setVolume(0);
+            // The set switches itself on, the way a TV does when you plug it in.
+            // Audio stays muted until the viewer turns the knob (browsers require
+            // a gesture before any sound can play at all).
+            powerOn(true);
         }
 
-        function createNavDots() {
-            $navDots.innerHTML = '';
+        /* ═══ Power ═══ */
+        function powerOn(firstBoot) {
+            if (powered) return;
+            powered = true;
+
+            CRT.unlock();
+            CRT.playClunk(true);
+            CRT.startAmbient();
+            if ($whineSwitch.getAttribute('aria-pressed') === 'true') CRT.setWhine(true);
+
+            $crush.classList.remove('crushing');
+            $crush.classList.add('booting');
+
+            // Degauss hum as the tube warms up
+            setTimeout(function() { CRT.playDegauss(); }, 90);
+
+            setTimeout(function() {
+                $set.classList.add('is-on');
+                $crush.classList.remove('booting');
+                if (firstBoot) {
+                    startChannel();
+                } else {
+                    showChannel(currentChannelIndex);
+                    startAutoRotate();
+                    startProgramRotation();
+                }
+            }, 700);
+        }
+
+        function powerOff() {
+            if (!powered) return;
+            powered = false;
+
+            CRT.playClunk(false);
+            CRT.staticOff();
+            CRT.stopAmbient();
+
+            if (autoRotateTimer) clearInterval(autoRotateTimer);
+            if (programTimer) clearTimeout(programTimer);
+            if (staticTimer) clearTimeout(staticTimer);
+
+            $set.classList.remove('is-on');
+            $rebuffer.classList.remove('show');
+            $osd.classList.remove('show');
+            if (osdTimer) clearTimeout(osdTimer);
+            $crush.classList.remove('booting');
+            $crush.classList.add('crushing');
+
+            $channelNum.textContent = 'CH--';
+            $channelName.textContent = 'STANDBY';
+            $channelSig.textContent = '░░░░░';
+        }
+
+        function togglePower() {
+            CRT.unlock();
+            powered ? powerOff() : powerOn(false);
+        }
+
+        /* ═══ Volume knob ═══ */
+        function setVolume(v) {
+            var vol = CRT.setVolume(v);
+            // Knob sweeps across 270 degrees, like a real potentiometer
+            var deg = -135 + (vol / 10) * 270;
+            $knobPointer.style.transform = 'rotate(' + deg + 'deg)';
+            $knob.setAttribute('aria-valuenow', Math.round(vol));
+            $volReadout.textContent = vol <= 0 ? 'MUTE' : String(Math.round(vol));
+            return vol;
+        }
+
+        /* ═══ On-screen display ═══ */
+        function flashOSD(ch) {
+            if (!ch) return;
+            $osd.querySelector('.osd-num').textContent = 'CH' + String(ch.num).padStart(2, '0');
+            $osd.querySelector('.osd-name').textContent = ch.name;
+            $osd.classList.add('show');
+            if (osdTimer) clearTimeout(osdTimer);
+            osdTimer = setTimeout(function() { $osd.classList.remove('show'); }, 2600);
+        }
+
+        function createPresets() {
+            $presets.innerHTML = '';
             channels.forEach(function(ch, i) {
-                var dot = document.createElement('div');
-                dot.className = 'dot';
-                dot.dataset.index = i;
-                dot.title = 'CH' + String(ch.num).padStart(2, '0') + ' — ' + ch.name;
-                dot.addEventListener('click', function() {
+                var b = document.createElement('button');
+                b.className = 'preset';
+                b.type = 'button';
+                b.dataset.index = i;
+                b.textContent = String(ch.num).padStart(2, '0');
+                b.title = 'CH' + String(ch.num).padStart(2, '0') + ' — ' + ch.name;
+                b.addEventListener('click', function() {
+                    CRT.unlock();
+                    CRT.playClick();
+                    if (!powered) { powerOn(false); return; }
                     switchToChannel(i);
                 });
-                $navDots.appendChild(dot);
+                $presets.appendChild(b);
             });
         }
 
         function bindEvents() {
             $prevBtn.addEventListener('click', function() {
+                CRT.unlock();
+                CRT.playClick();
+                if (!powered) { powerOn(false); return; }
                 var prev = currentChannelIndex - 1;
                 if (prev < 0) prev = channels.length - 1;
                 switchToChannel(prev);
             });
 
             $nextBtn.addEventListener('click', function() {
+                CRT.unlock();
+                CRT.playClick();
+                if (!powered) { powerOn(false); return; }
                 var next = (currentChannelIndex + 1) % channels.length;
                 switchToChannel(next);
             });
 
-            // Keyboard controls
+            $powerBtn.addEventListener('click', togglePower);
+
+            // The flyback whine is real, and genuinely painful for some people.
+            // It stays off until someone deliberately asks for it.
+            $whineSwitch.addEventListener('click', function() {
+                var on = $whineSwitch.getAttribute('aria-pressed') !== 'true';
+                $whineSwitch.setAttribute('aria-pressed', on ? 'true' : 'false');
+                CRT.unlock();
+                CRT.playClick();
+                CRT.setWhine(on);
+            });
+
+            bindKnob();
+
             document.addEventListener('keydown', function(e) {
+                // Never hijack typing inside a program's own inputs
+                var t = e.target;
+                if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+
                 if (e.key === '[' || e.key === 'ArrowLeft') {
-                    $prevBtn.click();
+                    press($prevBtn);
                 } else if (e.key === ']' || e.key === 'ArrowRight') {
-                    $nextBtn.click();
+                    press($nextBtn);
+                } else if (e.key === 'p' || e.key === 'P') {
+                    press($powerBtn);
+                } else if (e.key === 'm' || e.key === 'M') {
+                    CRT.unlock();
+                    CRT.playClick();
+                    setVolume(CRT.getVolume() > 0 ? 0 : 6);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault(); CRT.unlock(); setVolume(CRT.getVolume() + 1);
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault(); CRT.unlock(); setVolume(CRT.getVolume() - 1);
+                }
+            });
+        }
+
+        // Show the key press on the physical button, so the cabinet stays believable
+        function press(btn) {
+            btn.classList.add('pressed');
+            setTimeout(function() { btn.classList.remove('pressed'); }, 110);
+            btn.click();
+        }
+
+        function bindKnob() {
+            var dragging = false;
+            var startY = 0;
+            var startVol = 0;
+
+            function begin(clientY) {
+                dragging = true;
+                startY = clientY;
+                startVol = CRT.getVolume();
+                CRT.unlock();
+            }
+            function move(clientY) {
+                if (!dragging) return;
+                // Drag up to turn it up: 12px of travel per step
+                setVolume(startVol + (startY - clientY) / 12);
+            }
+            function end() { dragging = false; }
+
+            $knob.addEventListener('pointerdown', function(e) {
+                e.preventDefault();
+                begin(e.clientY);
+                $knob.setPointerCapture(e.pointerId);
+            });
+            $knob.addEventListener('pointermove', function(e) { move(e.clientY); });
+            $knob.addEventListener('pointerup', end);
+            $knob.addEventListener('pointercancel', end);
+
+            $knob.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                CRT.unlock();
+                setVolume(CRT.getVolume() + (e.deltaY < 0 ? 0.6 : -0.6));
+            }, { passive: false });
+
+            $knob.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+                    e.preventDefault(); CRT.unlock(); setVolume(CRT.getVolume() + 1);
+                } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+                    e.preventDefault(); CRT.unlock(); setVolume(CRT.getVolume() - 1);
                 }
             });
         }
@@ -426,6 +1350,7 @@
 
             // Auto-rotate to next channel every ROTATION_INTERVAL
             autoRotateTimer = setInterval(function() {
+                if (!powered) return;
                 currentChannelIndex = (currentChannelIndex + 1) % channels.length;
                 currentProgramIndex = 0;
                 showStatic(function() {
@@ -448,6 +1373,7 @@
 
             // Show static then next program
             staticTimer = setTimeout(function() {
+                if (!powered) return;
                 showStatic(function() {
                     currentProgramIndex = (currentProgramIndex + 1) % ch.programs.length;
                     showProgram(ch, currentProgramIndex);
@@ -457,41 +1383,48 @@
         }
 
         function showStatic(callback) {
-            $static.classList.add('active');
-            // Add random static noise
-            var noise = '';
-            for (var i = 0; i < 2000; i++) {
-                noise += String.fromCharCode(0x2588);
-            }
-            // Actually, let's use CSS animation instead
+            CRT.staticOn();
+            CRT.playStatic(STATIC_DURATION / 1000);
+
+            // Tear the picture as the tuner lets go of the old channel
+            $tube.classList.add('glitching');
+            setTimeout(function() { $tube.classList.remove('glitching'); }, 450);
 
             setTimeout(function() {
-                $static.classList.remove('active');
+                CRT.staticOff();
+                CRT.playTuneBeep();
                 if (callback) callback();
             }, STATIC_DURATION);
         }
 
         function showRebuffer(callback) {
-            $rebuffer.style.display = 'block';
+            CRT.staticOn();
+            CRT.playStatic(2.4);
+            $rebuffer.classList.add('show');
             $rebuffer.innerHTML = '<span class="line">PUBLIC ACCESS CHANNEL</span>' +
                                   '<span class="line">INITIALIZING TRANSMISSION...</span>' +
                                   '<span class="line">SIGNAL ACQUIRED</span>' +
                                   '<span class="line" style="font-size:10px;">channel_lock: [██████████] 100%</span>';
 
             setTimeout(function() {
-                $rebuffer.style.display = 'none';
+                $rebuffer.classList.remove('show');
+                CRT.staticOff();
+                CRT.playTuneBeep();
                 if (callback) callback();
             }, 2500);
         }
 
         // ═══ Display functions ═══
         function showChannel(index) {
+            // A timer scheduled before power-off must not repaint a dark tube
+            if (!powered) return;
+
             var ch = channels[index];
             currentChannelIndex = index;
             currentProgramIndex = 0;
 
             if (!ch) {
-                $notFound.style.display = 'block';
+                $notFound.style.display = 'flex';
                 $content.innerHTML = '';
                 $channelNum.textContent = 'CH--';
                 $channelName.textContent = 'UNKNOWN';
@@ -505,14 +1438,18 @@
             $channelName.style.color = ch.color;
             $channelSig.innerHTML = getSignalBars(index);
 
-            // Update nav dots
-            updateNavDots();
+            // Update preset buttons
+            updatePresets();
+
+            // Channel badge, drawn over the picture by the set
+            flashOSD(ch);
 
             // Show current program
             showProgram(ch, 0);
         }
 
         function showProgram(ch, progIndex) {
+            if (!powered) return;
             var prog = ch.programs[progIndex];
             if (!prog) return;
 
@@ -540,10 +1477,10 @@
             }
         }
 
-        function updateNavDots() {
-            var dots = $navDots.querySelectorAll('.dot');
-            dots.forEach(function(dot, i) {
-                dot.classList.toggle('active', i === currentChannelIndex);
+        function updatePresets() {
+            var btns = $presets.querySelectorAll('.preset');
+            btns.forEach(function(b, i) {
+                b.classList.toggle('active', i === currentChannelIndex);
             });
         }
 

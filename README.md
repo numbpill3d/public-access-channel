@@ -6,7 +6,7 @@ Think public-access TV, except each program is somebody's webpage.
 
 **▶ Watch it live: https://numbpill3d.github.io/public-access-channel/**
 
-![The TV tuned to CH02 — JOURNALS](screenshot.png)
+![The set tuned to CH02 — JOURNALS](screenshot.png)
 
 ---
 
@@ -24,15 +24,35 @@ Then open <http://localhost:8000>.
 
 You can also just open `index.html` straight from disk (`xdg-open index.html`) — it works, since the only external dependency is Three.js from a CDN.
 
-## Watching
+## Working the set
 
-| Action | Control |
+It's a television, so you operate it like one. The whole cabinet is live.
+
+| Control | What it does |
 |---|---|
-| Previous / next channel | `[` / `]`, `←` / `→`, or the **CHANNEL [-]** / **CHANNEL [+]** buttons |
-| Jump to a channel | Click a navigation dot below the screen |
-| Do nothing | The TV rotates on its own |
+| **◀ / ▶** buttons, or `←` `→` `[` `]` | Tune down / up a channel |
+| **Preset** buttons (02, 03, 04, 07, 11, 404) | Jump straight to a channel |
+| **POWER**, or `P` | Switch the set off and on — tube collapse, degauss, and warm-up included |
+| **VOLUME** knob — drag, scroll, or `↑` `↓` | Master volume. Starts at **MUTE** |
+| `M` | Mute / unmute |
+| **FLYBACK 15.7kHz** switch | Adds the high whine a real CRT makes. Off by default — see below |
+| Nothing at all | The set tunes itself |
 
 **Timing** — the set changes channel every **4 minutes**. Inside a channel with more than one program, it moves to the next program every **40 seconds**. Every switch is covered by **3 seconds of static**, the way a real tuner would.
+
+## The set itself
+
+The television isn't a picture of a television. It's built out of the page.
+
+**The tube** is a true 4:3 rectangle with the uneven corner radius of curved glass, and the picture carries the artifacts a real one would: an RGB **shadow mask** at the sub-pixel level, **scanlines** with a slow mains flicker, a **bright band rolling** up a slightly out-of-sync picture, **corner vignetting**, **phosphor bloom** on every glyph, and a **specular reflection** across the faceplate. Switch it off and the image **collapses to a white line, then a dot**.
+
+**Between channels** the tuner loses its grip: the picture **tears sideways**, real animated **snow** fills the tube, and the channel badge flashes in the corner as it locks on.
+
+**Sound** is synthesized live with the Web Audio API — there are no audio files in this repo. Turning the volume up gets you the carrier hiss of a live tube, a burst of static across every channel change, a two-tone lock confirmation, the mechanical clunk of the power switch, the wobbling hum of the **degaussing coil** at power-on, and a click with real body under each button.
+
+> **About the flyback switch.** A working CRT emits a 15.7kHz tone from its flyback transformer. Plenty of people genuinely hear it, and plenty of those find it painful. It's reproduced here accurately, which is exactly why it is **off by default, very quiet, and behind its own switch** rather than part of the normal sound.
+
+Audio stays muted until you turn the knob — browsers require a deliberate gesture before any page may make sound. Everything degrades cleanly: no Web Audio support means a silent but fully working television, and `prefers-reduced-motion` stops the rolling band and the tearing.
 
 ## The channels
 
@@ -66,7 +86,8 @@ CH03 and CH11 carry the **NHI pet** — a low-poly Three.js entity that floats, 
 
 A few things worth knowing:
 
-- Your HTML is injected into the screen area, so it inherits the CRT styling. Inline styles override it.
+- Your HTML is injected into the tube, so it inherits the CRT styling — scanlines, phosphor bloom, and all. Inline styles override it.
+- Every effect layer is `pointer-events: none`, so interactive programs still receive clicks.
 - Keep it short. This is a TV spot, not a homepage.
 - `duration` is a hint — the rotation is what actually drives the pacing.
 
@@ -91,14 +112,14 @@ neocities upload index.html public_access_channels.js public_access_submit.html 
 
 | File | What it is |
 |---|---|
-| `index.html` | The TV — rotation, CRT frame, static effect, navigation |
+| `index.html` | The whole television — cabinet, tube, effects, sound, and channel rotation |
 | `public_access_channels.js` | **All channel and program content.** This is the file you edit |
 | `public_access_submit.html` | Submission form with live preview and JSON export |
 | `nhi_pet.js` | The NHI pet, as a reusable module |
 | `nhi_pet_widget.html` | Standalone self-contained pet widget |
 | `nhi_pet_demo.html` | Minimal demo page for the pet |
 
-The look: vintage wood-and-purple TV frame, scanlines, a signal-strength meter, MS Gothic monospace, and a palette of purple `#8b008b`, magenta `#ff69b4`, green `#0f0`, and red `#ff0000`.
+The look: a dark plastic cabinet with a lit power lamp and a green panel readout, MS Gothic monospace throughout, and a palette of purple `#8b008b`, magenta `#ff69b4`, green `#0f0`, and red `#ff0000`.
 
 ---
 
