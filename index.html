@@ -350,6 +350,91 @@
             100% { clip-path: inset(0 0 0 0); background: #000; opacity: 0; }
         }
 
+        /* ═══ Interference — random bursts of a failing signal ═══ */
+
+        /* Chroma split: the three guns losing convergence */
+        .tube.g-chroma .screen-content {
+            text-shadow:
+                2px 0 rgba(255, 0, 84, 0.9),
+                -2px 0 rgba(0, 238, 255, 0.75),
+                0 0 8px rgba(200, 120, 220, 0.3);
+        }
+        .tube.g-chroma-hard .screen-content {
+            text-shadow:
+                5px 0 rgba(255, 0, 84, 0.95),
+                -5px 0 rgba(0, 238, 255, 0.85),
+                0 0 10px rgba(200, 120, 220, 0.35);
+        }
+
+        /* The picture slipping sideways in blocks */
+        .tube.g-slip .screen-content { animation: slip 0.34s steps(5) 1; }
+        @keyframes slip {
+            0%   { transform: translateX(0); }
+            20%  { transform: translateX(-14px); }
+            40%  { transform: translateX(9px); }
+            60%  { transform: translateX(-5px); }
+            80%  { transform: translateX(3px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Vertical hold letting go */
+        .tube.g-jump .screen-content { animation: vjump 0.42s steps(3) 1; }
+        @keyframes vjump {
+            0%   { transform: translateY(0); }
+            33%  { transform: translateY(-22px); }
+            66%  { transform: translateY(13px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Displaced tracking bands, positioned from script */
+        .fx-glitch { z-index: 17; opacity: 0; }
+        .fx-glitch.on { opacity: 1; }
+        .fx-glitch .band {
+            position: absolute;
+            left: 0;
+            right: 0;
+            mix-blend-mode: screen;
+            background: linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.03),
+                rgba(190, 120, 220, 0.16) 45%,
+                rgba(255, 255, 255, 0.05)
+            );
+            box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.5);
+        }
+        .fx-glitch .band.dark {
+            background: linear-gradient(180deg, rgba(0,0,0,0.75), rgba(0,0,0,0.5));
+            mix-blend-mode: multiply;
+        }
+
+        /* ═══ Frame injection ═══
+           A frame that was not part of the broadcast.
+           Deliberately dark and low-contrast: a white full-screen flash at
+           this duration is the classic photosensitive-seizure trigger, and
+           accuracy is not worth hurting anyone over. */
+        .fx-inject {
+            z-index: 18;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #07060e;
+            color: #7e5f86;
+            font-family: var(--font-screen);
+            font-size: 20px;
+            letter-spacing: 3px;
+            text-align: center;
+            line-height: 1.35;
+            padding: 24px;
+        }
+        .fx-inject.on { display: flex; }
+        .fx-inject .sub {
+            font-size: 13px;
+            letter-spacing: 2px;
+            color: #4a5f52;
+        }
+
         /* Horizontal tearing when the tuner jumps channel */
         .tube.glitching .screen-content { animation: tear 0.42s steps(3) 1; }
         @keyframes tear {
@@ -831,7 +916,11 @@
         /* Respect users who don't want motion */
         @media (prefers-reduced-motion: reduce) {
             .fx-roll, .fx-scanlines { animation: none; }
-            .tube.glitching .screen-content { animation: none; }
+            .tube.glitching .screen-content,
+            .tube.g-slip .screen-content,
+            .tube.g-jump .screen-content { animation: none; }
+            /* Interference and injected frames are suppressed in script as well */
+            .fx-glitch, .fx-inject { display: none !important; }
         }
     </style>
 </head>
@@ -875,6 +964,14 @@
                         <div class="fx fx-vignette"></div>
                         <div class="fx fx-curve"></div>
                         <div class="fx fx-glare"></div>
+                        <div class="fx fx-glitch" id="glitch">
+                            <div class="band"></div>
+                            <div class="band dark"></div>
+                            <div class="band"></div>
+                        </div>
+
+                        <div class="fx fx-inject" id="inject"></div>
+
                         <div class="fx fx-crush" id="crush"></div>
                     </div>
                 </div>
@@ -1335,7 +1432,112 @@
             return { start: start, stop: stop, steps: function() { return steps; } };
         })();
 
+        /* ─────────────────────────────────────────────
+           INTERFERENCE — bursts of a signal that isn't holding
+
+           Everything here is rate-limited and suppressed entirely under
+           prefers-reduced-motion. Injected frames stay dark and low-contrast:
+           a bright full-screen flash at single-frame duration is the
+           photosensitive-seizure trigger profile, and authenticity is not
+           worth hurting a reader over.
+           ───────────────────────────────────────────── */
+        var reduceMotion = window.matchMedia &&
+                           window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        var $tube = document.getElementById('tube');
+        var $glitch = document.getElementById('glitch');
+        var $inject = document.getElementById('inject');
+        var glitchTimer = null;
+        var lastInject = 0;
+        var MIN_INJECT_GAP = 9000;   // never anywhere near a flicker rate
+
+        /* Things that were not in the broadcast. */
+        var CARRIER = [
+            { line: 'STAND BY',                     sub: '48.8566 N / 2.3522 E' },
+            { line: 'ARE YOU RECEIVING',            sub: 'no acknowledgement logged' },
+            { line: '5 3 9 . 5 3 9 . 5 3 9',        sub: 'repeat until dawn' },
+            { line: 'GUR FVTVY VF VA GUR NFU',      sub: 'rot13 // do not reply' },
+            { line: 'CHANNEL 13 IS NOT EMPTY',      sub: 'it is only unlisted' },
+            { line: 'WE COUNTED 47 DAYS',           sub: 'you counted differently' },
+            { line: 'DO NOT ADJUST YOUR SET',       sub: 'the fault is not yours' },
+            { line: 'SOMEONE ELSE IS WATCHING',     sub: 'from the same frequency' }
+        ];
+
+        function injectFrame() {
+            if (reduceMotion || !$inject) return;
+            var t = Date.now();
+            if (t - lastInject < MIN_INJECT_GAP) return;
+            lastInject = t;
+
+            var f = CARRIER[(Math.random() * CARRIER.length) | 0];
+            $inject.innerHTML = '<div>' + f.line + '</div><div class="sub">' + f.sub + '</div>';
+            $inject.classList.add('on');
+
+            // Three frames: long enough to register, short enough to doubt
+            var frames = 0;
+            (function hold() {
+                if (++frames < 3) return requestAnimationFrame(hold);
+                $inject.classList.remove('on');
+            })();
+        }
+
+        function placeBands() {
+            var bands = $glitch.querySelectorAll('.band');
+            for (var i = 0; i < bands.length; i++) {
+                var b = bands[i];
+                b.style.top = (Math.random() * 82) + '%';
+                b.style.height = (2 + Math.random() * 9) + '%';
+                b.style.transform = 'translateX(' + ((Math.random() * 34) - 17) + 'px)';
+                b.style.display = Math.random() > 0.35 ? 'block' : 'none';
+            }
+        }
+
+        /* One burst: pick a failure mode, hold it briefly, clean up after. */
+        function glitchBurst(force) {
+            if (reduceMotion && !force) return;
+
+            var modes = ['g-chroma', 'g-slip', 'g-jump', 'g-chroma-hard'];
+            var mode = modes[(Math.random() * modes.length) | 0];
+            var dur = 180 + Math.random() * 320;
+
+            $tube.classList.add(mode);
+            placeBands();
+            $glitch.classList.add('on');
+
+            // Occasionally a burst is bad enough to let a foreign frame through
+            if (Math.random() < 0.28) setTimeout(injectFrame, dur * 0.5);
+
+            setTimeout(function() {
+                $tube.classList.remove(mode);
+                $glitch.classList.remove('on');
+            }, dur);
+        }
+
+        function scheduleGlitch() {
+            if (reduceMotion) return;
+            // Irregular on purpose — a predictable glitch stops being a glitch
+            var wait = 9000 + Math.random() * 26000;
+            glitchTimer = setTimeout(function() {
+                if (!document.hidden) glitchBurst();
+                scheduleGlitch();
+            }, wait);
+        }
+
+        function stopGlitch() {
+            if (glitchTimer) { clearTimeout(glitchTimer); glitchTimer = null; }
+            $glitch.classList.remove('on');
+            $inject.classList.remove('on');
+            ['g-chroma', 'g-slip', 'g-jump', 'g-chroma-hard'].forEach(function(c) {
+                $tube.classList.remove(c);
+            });
+        }
+
         return {
+            glitchBurst: glitchBurst,
+            injectFrame: injectFrame,
+            scheduleGlitch: scheduleGlitch,
+            stopGlitch: stopGlitch,
+            reduceMotion: function() { return reduceMotion; },
             bgStart: bg.start,
             bgStop: bg.stop,
             bgSteps: bg.steps,
@@ -1366,8 +1568,38 @@
         var PROGRAM_DURATION = 40000;   // 40 seconds per program
         var STATIC_DURATION = 3000;     // 3 seconds of static between programs
 
+        // ═══ The unlisted channel ═══
+        // Not on the preset grid, skipped by the tuner and by auto-rotation.
+        // Reachable only by keying its number directly on the set.
+        var UNLISTED = {
+            num: 13,
+            name: 'CARRIER',
+            desc: 'Unlisted. Do not report this frequency.',
+            color: '#7fffa8',
+            hidden: true,
+            programs: [{
+                title: 'CARRIER // UNLISTED',
+                author: 'not_transmitting',
+                duration: 60,
+                html: [
+                    '<div style="text-align:center;color:#7fffa8;line-height:1.5">',
+                    '<div style="opacity:.55;font-size:12px;letter-spacing:3px">— NO PROGRAM SCHEDULED —</div>',
+                    '<div style="margin:18px 0;font-size:26px;letter-spacing:6px">5 3 9</div>',
+                    '<div style="font-size:13px;opacity:.8">GUR NFU ERZRZOREF RIRELGUVAT</div>',
+                    '<div style="margin-top:16px;font-size:11px;opacity:.5">',
+                    'you were not meant to find this one.<br>',
+                    'it has been broadcasting the whole time.',
+                    '</div>',
+                    '<div style="margin-top:20px;font-size:10px;opacity:.35;letter-spacing:2px">',
+                    'thank you for looking.',
+                    '</div>',
+                    '</div>'
+                ].join('')
+            }]
+        };
+
         // State
-        var channels = PUBLIC_ACCESS_CHANNELS || [];
+        var channels = (PUBLIC_ACCESS_CHANNELS || []).concat([UNLISTED]);
         var currentChannelIndex = 0;
         var currentProgramIndex = 0;
         var autoRotateTimer = null;
@@ -1419,6 +1651,7 @@
             CRT.unlock();
             CRT.playClunk(true);
             CRT.startAmbient();
+            CRT.scheduleGlitch();
             if ($whineSwitch.getAttribute('aria-pressed') === 'true') CRT.setWhine(true);
 
             $crush.classList.remove('crushing');
@@ -1447,6 +1680,7 @@
             CRT.playClunk(false);
             CRT.staticOff();
             CRT.stopAmbient();
+            CRT.stopGlitch();
 
             if (autoRotateTimer) clearInterval(autoRotateTimer);
             if (programTimer) clearTimeout(programTimer);
@@ -1493,6 +1727,7 @@
         function createPresets() {
             $presets.innerHTML = '';
             channels.forEach(function(ch, i) {
+                if (ch.hidden) return;   // not on the dial
                 var b = document.createElement('button');
                 b.className = 'preset';
                 b.type = 'button';
@@ -1514,17 +1749,14 @@
                 CRT.unlock();
                 CRT.playClick();
                 if (!powered) { powerOn(false); return; }
-                var prev = currentChannelIndex - 1;
-                if (prev < 0) prev = channels.length - 1;
-                switchToChannel(prev);
+                switchToChannel(nextListed(currentChannelIndex, -1));
             });
 
             $nextBtn.addEventListener('click', function() {
                 CRT.unlock();
                 CRT.playClick();
                 if (!powered) { powerOn(false); return; }
-                var next = (currentChannelIndex + 1) % channels.length;
-                switchToChannel(next);
+                switchToChannel(nextListed(currentChannelIndex, 1));
             });
 
             $powerBtn.addEventListener('click', togglePower);
@@ -1546,6 +1778,12 @@
                 var t = e.target;
                 if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
 
+                // Digits key a channel number directly — including ones not on the dial
+                if (e.key >= '0' && e.key <= '9') {
+                    keyDigit(e.key);
+                    return;
+                }
+
                 if (e.key === '[' || e.key === 'ArrowLeft') {
                     press($prevBtn);
                 } else if (e.key === ']' || e.key === 'ArrowRight') {
@@ -1560,6 +1798,36 @@
                 // Up/down deliberately left alone: they scroll a long program
                 // inside the tube. Volume by keyboard lives on the knob itself.
             });
+        }
+
+        /* ═══ Direct channel entry ═══
+           Two digits within a couple of seconds tunes to that number, whether or
+           not it appears on the preset grid. */
+        var digitBuf = '';
+        var digitTimer = null;
+
+        function keyDigit(d) {
+            CRT.unlock();
+            CRT.playClick();
+            if (!powered) { powerOn(false); return; }
+
+            digitBuf += d;
+            if (digitBuf.length > 3) digitBuf = digitBuf.slice(-3);
+
+            if (digitTimer) clearTimeout(digitTimer);
+            digitTimer = setTimeout(function() { digitBuf = ''; }, 1600);
+
+            // Longest match first, so 404 wins over 40 and 04
+            for (var len = Math.min(3, digitBuf.length); len >= 1; len--) {
+                var probe = parseInt(digitBuf.slice(-len), 10);
+                for (var i = 0; i < channels.length; i++) {
+                    if (channels[i].num === probe && i !== currentChannelIndex) {
+                        digitBuf = '';
+                        switchToChannel(i);
+                        return;
+                    }
+                }
+            }
         }
 
         // Show the key press on the physical button, so the cabinet stays believable
@@ -1646,7 +1914,7 @@
             // Auto-rotate to next channel every ROTATION_INTERVAL
             autoRotateTimer = setInterval(function() {
                 if (!powered) return;
-                currentChannelIndex = (currentChannelIndex + 1) % channels.length;
+                currentChannelIndex = nextListed(currentChannelIndex, 1);
                 currentProgramIndex = 0;
                 showStatic(function() {
                     showChannel(currentChannelIndex);
@@ -1774,6 +2042,16 @@
             if (document.getElementById('nhi-pet-canvas') && typeof THREE !== 'undefined') {
                 initNHIPet('nhi-pet-canvas');
             }
+        }
+
+        // Step through listed channels only; the unlisted one is not on the path
+        function nextListed(from, dir) {
+            var i = from;
+            for (var guard = 0; guard < channels.length; guard++) {
+                i = (i + dir + channels.length) % channels.length;
+                if (!channels[i].hidden) return i;
+            }
+            return from;
         }
 
         function updatePresets() {
@@ -1989,6 +2267,19 @@
             };
             animate();
         }
+
+        // For anyone who thinks to look here.
+        try {
+            console.log(
+                '%c PUBLIC ACCESS CHANNELS ',
+                'background:#2a0a2e;color:#7fffa8;font-weight:bold;padding:3px 6px'
+            );
+            console.log(
+                '%cthe dial shows six channels.\nthe tuner accepts numbers the dial does not print.\ntry keying one in.',
+                'color:#b07ac0'
+            );
+            console.log('%c539 // GUR NFU ERZRZOREF RIRELGUVAT', 'color:#4a5f52');
+        } catch (e) { /* no console, no matter */ }
 
         // ═══ Boot ═══
         window.addEventListener('load', function() {
