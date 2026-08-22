@@ -859,6 +859,40 @@
                 radial-gradient(ellipse 14% 4% at 12% 4%, rgba(255,230,200,0.05), transparent 70%);
         }
 
+        /* ═══ Engraved plate: how to get on the air ═══ */
+        .submit-plate {
+            flex-shrink: 0;
+            display: block;
+            padding: 7px 13px 8px;
+            border-radius: 3px;
+            font-family: var(--font-panel);
+            font-size: 10px;
+            letter-spacing: 0;
+            line-height: 1.5;
+            text-align: center;
+            text-decoration: none;
+            color: #c4b3a4;
+            background: linear-gradient(180deg, #46403c, #2e2a27);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 240, 225, 0.28),
+                0 3px 0 #1b1817,
+                0 4px 6px rgba(0, 0, 0, 0.55);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+            transition: transform 0.05s linear, box-shadow 0.05s linear, color 0.15s;
+        }
+        .submit-plate:hover { color: #ffc4ec; background: linear-gradient(180deg, #524a45, #37322e); }
+        .submit-plate:active {
+            transform: translateY(3px);
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), 0 0 0 #1b1817;
+        }
+        .submit-plate b {
+            display: block;
+            font-size: 11px;
+            color: #ffb0e0;
+            margin-bottom: 1px;
+        }
+        .submit-plate:focus-visible { outline: 2px solid #ff69b4; outline-offset: 3px; }
+
         .hint {
             margin-top: 14px;
             text-align: center;
@@ -892,6 +926,8 @@
             .knob-wrap { flex: 1 1 46%; }
             .presets { flex: 1 1 100%; grid-template-columns: repeat(6, 1fr); }
             .speaker { width: 74px; height: 26px; }
+            .cabinet-foot { flex-wrap: wrap; }
+            .submit-plate { flex: 1 1 100%; }
             .tube { border-radius: 26px / 20px; }
             .fx-curve, .fx-glare { border-radius: 26px / 20px; }
             .screen-content { padding: 16px 18px; font-size: 13px; }
@@ -1032,10 +1068,15 @@
                     <span class="title" id="prog-title">--:--</span>
                     <span class="author"> by </span><span class="author" id="prog-author">unknown</span>
                 </div>
+
+                <a class="submit-plate" href="public_access_submit.html">
+                    <b>GET ON AIR</b>
+                    submit a program
+                </a>
             </div>
 
             <div class="hint">
-                <kbd>L</kbd> <kbd>R</kbd> tune &nbsp;·&nbsp; <kbd>P</kbd> power &nbsp;·&nbsp; <kbd>M</kbd> mute &nbsp;·&nbsp; arrow keys work too
+                <kbd>L</kbd> <kbd>R</kbd> tune &nbsp;·&nbsp; <kbd>0</kbd>–<kbd>9</kbd> key a channel &nbsp;·&nbsp; <kbd>P</kbd> power &nbsp;·&nbsp; <kbd>M</kbd> mute
             </div>
         </div>
     </div>

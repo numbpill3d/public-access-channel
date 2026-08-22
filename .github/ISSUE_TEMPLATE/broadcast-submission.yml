@@ -1,0 +1,77 @@
+name: Submit a broadcast
+description: Put your page, or a short piece of HTML, on one of the channels.
+title: "[CH??] "
+labels: ["broadcast"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Anything you send here gets read by a person before it goes on air.
+        You can submit **a link to your site** or **a short piece of HTML** — either is fine.
+
+  - type: input
+    id: prog_title
+    attributes:
+      label: Programme title
+      description: What it should say on the now-playing plate.
+      placeholder: DAY 47 — STATIC BREACH
+    validations:
+      required: true
+
+  - type: input
+    id: author
+    attributes:
+      label: Your handle
+      description: However you want to be credited. A pseudonym is fine.
+      placeholder: anonymous
+    validations:
+      required: true
+
+  - type: dropdown
+    id: channel
+    attributes:
+      label: Channel
+      description: Where it belongs. If you're not sure, pick UNKNOWN.
+      options:
+        - "CH02 — JOURNALS (personal logs, diary entries, thoughts in the dark)"
+        - "CH03 — ART (visual works, pixel art, glitch compositions)"
+        - "CH04 — COMPUTERS (code, terminal output, ASCII and text-mode art)"
+        - "CH07 — PERSONAL (link pages, bios, personal spaces)"
+        - "CH11 — UNKNOWN (experimental, uncategorised, anomalous)"
+    validations:
+      required: true
+
+  - type: input
+    id: site_url
+    attributes:
+      label: Your site (optional)
+      description: If you'd rather we link or excerpt your page than have you write HTML, put the address here.
+      placeholder: https://yoursite.neocities.org
+    validations:
+      required: false
+
+  - type: textarea
+    id: html
+    attributes:
+      label: The programme
+      description: >
+        Short HTML, or plain text and we'll set it. Inline styles work; it inherits the CRT look.
+        Keep it to a TV spot rather than a homepage. Leave blank if you gave a site address above.
+      render: html
+      placeholder: |
+        <div style="text-align:center;color:#fff">
+          <div style="color:#ff69b4">[ TRANSMISSION BEGINS ]</div>
+          <p>your words here</p>
+        </div>
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Before you send
+      options:
+        - label: This is my own work, or I have the right to broadcast it.
+          required: true
+        - label: I understand it will be visible to anyone who tunes in.
+          required: true

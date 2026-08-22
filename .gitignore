@@ -12,3 +12,6 @@ __pycache__/
 
 # Neocities cache
 .neocities_api_key
+
+# Local agent/session state
+/.claude/

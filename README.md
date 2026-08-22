@@ -31,6 +31,7 @@ It's a television, so you operate it like one. The whole cabinet is live.
 | Control | What it does |
 |---|---|
 | **CH −** / **CH +** buttons, or `←` `→` `[` `]` | Tune down / up a channel |
+| `0`–`9` | Key a channel number directly, the way a set with a keypad works |
 | **Preset** buttons (02, 03, 04, 07, 11, 404) | Jump straight to a channel |
 | **POWER**, or `P` | Switch the set off and on — tube collapse, degauss, and warm-up included |
 | **VOLUME** knob — drag it, scroll it, or focus it and use `↑` `↓` | Master volume. Starts at **MUTE** |
@@ -44,9 +45,15 @@ It's a television, so you operate it like one. The whole cabinet is live.
 
 The television isn't a picture of a television. It's built out of the page.
 
+**The backdrop** behind the set is a cyclic cellular automaton — a coarse grid of cells, each advancing to the next state once enough of its neighbours have got there first. It never settles; it organises itself into drifting spirals, and the palette it's drawn from slides around a colour ring so the whole field changes character over several minutes. Cyclic rather than Game of Life on purpose: Life stabilises or dies out, and a background that freezes just looks broken.
+
 **The tube** is a true 4:3 rectangle with the uneven corner radius of curved glass, and the picture carries the artifacts a real one would: an RGB **shadow mask** at the sub-pixel level, **scanlines** with a slow mains flicker, a **bright band rolling** up a slightly out-of-sync picture, **corner vignetting**, **phosphor bloom** on every glyph, and a **specular reflection** across the faceplate. Switch it off and the image **collapses to a white line, then a dot**.
 
 **Between channels** the tuner loses its grip: the picture **tears sideways**, real animated **snow** fills the tube, and the channel badge flashes in the corner as it locks on.
+
+**The signal is not reliable.** At irregular intervals the picture breaks up — the three guns lose convergence and the image splits red-and-cyan, the frame slips sideways, vertical hold lets go, tracking bands drift across the screen. Roughly one break in four lets through **a frame that wasn't part of the broadcast**. Those frames are held for three frames and deliberately kept dark and low-contrast, with a nine-second floor between them: a bright full-screen flash at that duration is the photosensitive-seizure trigger profile, and accuracy isn't worth hurting anyone over. `prefers-reduced-motion` switches interference and injection off entirely.
+
+> The dial has six channels on it. The tuner accepts numbers the dial doesn't print. There's a note in the browser console for anyone who thinks to look.
 
 **Sound** is synthesized live with the Web Audio API — there are no audio files in this repo. Turning the volume up gets you the carrier hiss of a live tube, a burst of static across every channel change, a two-tone lock confirmation, the mechanical clunk of the power switch, the wobbling hum of the **degaussing coil** at power-on, and a click with real body under each button.
 
@@ -69,11 +76,15 @@ Six channels, currently carrying 11 programs between them.
 
 CH03 and CH11 carry the **NHI pet** — a low-poly Three.js entity that floats, tracks your cursor with three eye-sensors, cycles moods when clicked, and gets hungry if you leave it alone.
 
-## Broadcasting something
+## Getting on the air
 
-**The easy way.** Open [`public_access_submit.html`](public_access_submit.html) in a browser. Fill in a title, your handle, a channel, and your HTML — it previews live and copies the finished JSON to your clipboard. Paste that into the right channel's `programs` array in `public_access_channels.js`.
+**Anyone can be on a channel.** You don't need to know how any of this works, and you don't need to write HTML — a link to your site is enough.
 
-**By hand.** Add an object to the `programs` array of any channel in `public_access_channels.js`:
+**The short way.** [**Open a submission**](https://github.com/numbpill3d/public-access-channel/issues/new?template=broadcast-submission.yml) and fill in the form. Give it a title, a handle, and either the address of your site or a short piece of HTML. Someone reads every submission before it goes on air.
+
+**With a preview first.** Open [the submit page](https://numbpill3d.github.io/public-access-channel/public_access_submit.html) — the **GET ON AIR** plate on the front of the set links straight to it. It previews your program on a mock screen as you type, then hands you a pre-filled submission to send.
+
+**If you'd rather do it yourself.** Fork the repository, add an object to the `programs` array of any channel in `public_access_channels.js`, and open a pull request:
 
 ```javascript
 {
@@ -91,7 +102,7 @@ A few things worth knowing:
 - Keep it short. This is a TV spot, not a homepage.
 - `duration` is a hint — the rotation is what actually drives the pacing.
 
-Then open `index.html` to check it, and send a pull request. If PRs aren't your thing, open an issue with your program pasted in and it'll get added.
+Then open `index.html` to check it before you send the pull request.
 
 ## Deploying your own
 

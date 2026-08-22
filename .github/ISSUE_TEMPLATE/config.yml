@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Build your programme first
+    url: https://numbpill3d.github.io/public-access-channel/public_access_submit.html
+    about: A form with a live preview that writes the JSON for you. Bring the result back here.
+  - name: Just want to watch
+    url: https://numbpill3d.github.io/public-access-channel/
+    about: Tune in. The set runs itself.

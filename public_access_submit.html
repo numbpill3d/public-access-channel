@@ -196,7 +196,7 @@
                 <div class="preview-content" id="preview-content">Your HTML will appear here...</div>
             </div>
 
-            <button type="submit" class="btn-submit">📡 Submit to Channel</button>
+            <button type="submit" class="btn-submit">📡 Build my program</button>
 
             <div class="submit-result" id="submit-result"></div>
         </form>
@@ -241,21 +241,49 @@
                 timestamp: new Date().toISOString()
             };
 
-            // Try to email or copy to clipboard
             var submission = JSON.stringify(program, null, 2);
 
-            // Copy to clipboard for manual submission
+            // Prefill the repository's submission form. The field names match the
+            // ids in .github/ISSUE_TEMPLATE/broadcast-submission.yml.
+            var CHANNEL_OPTION = {
+                '2':  'CH02 — JOURNALS (personal logs, diary entries, thoughts in the dark)',
+                '3':  'CH03 — ART (visual works, pixel art, glitch compositions)',
+                '4':  'CH04 — COMPUTERS (code, terminal output, ASCII and text-mode art)',
+                '7':  'CH07 — PERSONAL (link pages, bios, personal spaces)',
+                '11': 'CH11 — UNKNOWN (experimental, uncategorised, anomalous)'
+            };
+            var issueUrl =
+                'https://github.com/numbpill3d/public-access-channel/issues/new' +
+                '?template=broadcast-submission.yml' +
+                '&title=' + encodeURIComponent('[CH' + channelNum + '] ' + program.title) +
+                '&prog_title=' + encodeURIComponent(program.title) +
+                '&author=' + encodeURIComponent(program.author) +
+                '&html=' + encodeURIComponent(program.html);
+            if (CHANNEL_OPTION[String(channelNum)]) {
+                issueUrl += '&channel=' + encodeURIComponent(CHANNEL_OPTION[String(channelNum)]);
+            }
+
+            function showResult(note) {
+                result.className = 'submit-result success';
+                result.innerHTML =
+                    '<p style="margin-bottom:10px"><strong>Your program is ready.</strong> ' + note + '</p>' +
+                    '<p style="margin-bottom:10px">' +
+                    '<a href="' + issueUrl + '" target="_blank" rel="noopener" ' +
+                    'style="display:inline-block;padding:10px 16px;background:#8b008b;color:#fff;' +
+                    'text-decoration:none;border-radius:4px;font-weight:bold">' +
+                    'Send it to CH' + channelNum + ' &rarr;</a>' +
+                    '</p>' +
+                    '<p style="font-size:12px;opacity:.75">Opens a pre-filled submission on GitHub. ' +
+                    'A person reads every one before it goes on air. ' +
+                    'No GitHub account? The JSON below works too — send it however you like.</p>' +
+                    '<pre style="margin-top:10px">' + submission.replace(/</g, '&lt;') + '</pre>';
+                result.style.display = 'block';
+            }
+
             navigator.clipboard.writeText(submission).then(function() {
-                result.className = 'submit-result success';
-                result.innerHTML = '✅ Submission copied to clipboard! Add this to <code>public_access_channels.js</code> in the CH' + channelNum + ' (' + channelName + ') channel.';
-                result.style.display = 'block';
-                form.reset();
-                preview.textContent = 'Your HTML will appear here...';
+                showResult('It is also copied to your clipboard.');
             }).catch(function() {
-                // Fallback: show the JSON
-                result.className = 'submit-result success';
-                result.innerHTML = '<pre>' + submission + '</pre><br>Copy the above JSON and add it to the CH' + channelNum + ' (' + channelName + ') channel in <code>public_access_channels.js</code>';
-                result.style.display = 'block';
+                showResult('');
             });
         });
     })();
