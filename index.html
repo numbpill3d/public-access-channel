@@ -135,34 +135,30 @@
             gap: 12px;
             margin-bottom: 12px;
             padding: 7px 12px 8px;
-            border-radius: 5px;
+            border-radius: 2px;
             font-family: var(--font-panel);
             font-size: 11px;
             letter-spacing: 1px;
-            /* A strip of woodgrain veneer — the one warm surface on the set */
-            background:
-                repeating-linear-gradient(88deg,
-                    rgba(0,0,0,0.3) 0px, rgba(0,0,0,0.07) 1px, rgba(255,190,120,0.028) 2px,
-                    rgba(0,0,0,0.18) 4px, rgba(0,0,0,0.04) 6px, rgba(255,175,105,0.022) 7px,
-                    rgba(0,0,0,0.26) 9px),
-                linear-gradient(92deg, #2e2117, #3f2e20 28%, #271c14 55%, #372820 78%, #221913);
+            /* Engraved steel plate — matches the gunmetal frame */
+            background: linear-gradient(92deg, #23282e, #31383f 28%, #1a1e23 55%, #2b3138 78%, #16191d);
+            border: 2px solid #0a0c0e;
             box-shadow:
-                inset 0 1px 0 rgba(255, 205, 150, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12),
                 inset 0 -2px 6px rgba(0, 0, 0, 0.75),
-                0 1px 0 rgba(255, 225, 200, 0.07);
+                0 4px 0 #0a0c0e;
         }
         .brand {
             font-family: var(--font-panel);
             font-weight: 700;
             font-size: 12px;
-            color: #d9c7b2;
+            color: #c8cfd6;
             /* Screen-printed ink sits *in* the plastic, so it gets a cut shadow */
             text-shadow: 0 1px 0 rgba(0,0,0,0.95), 0 -1px 0 rgba(255,220,180,0.22);
         }
-        .brand span { color: #ff4444; }
+        .brand span { color: #ff3b30; }
         .model-no {
             font-family: var(--font-panel);
-            color: #b09b86;
+            color: #9aa3ad;
             font-size: 11px;
             opacity: 0.78;   /* worn away by thirty years of thumbs */
             text-shadow: 0 1px 0 rgba(0,0,0,0.85);
@@ -213,29 +209,52 @@
             box-shadow: none;
         }
 
-        /* Content sits at the bottom of the stack and stays interactive */
+        /* Content sits at the bottom of the stack and stays interactive.
+           The tube over the PNG is small (~360px wide), so everything
+           inside is contained: fixed-width program boxes shrink to fit,
+           long terminal lines wrap instead of clipping. */
         .screen-content {
             position: absolute;
             inset: 0;
             z-index: 1;
-            padding: 6% 7%;
+            padding: 4% 5%;
             overflow-y: auto;
             overflow-x: hidden;
             font-family: var(--font-screen);
-            font-size: clamp(11px, 1.8vw, 15px);
+            font-size: clamp(10px, 1.7vw, 13px);
             line-height: 1.45;
             color: #e8e0e8;
             opacity: 0;
             transition: opacity 0.35s ease;
             /* Phosphor bloom — text on a CRT never has hard edges */
-            text-shadow: 0 0 1px rgba(255, 255, 255, 0.5), 0 0 7px rgba(200, 120, 220, 0.28);
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.5), 0 0 7px rgba(255, 80, 80, 0.15);
             scrollbar-width: thin;
-            scrollbar-color: #6b3a72 transparent;
+            scrollbar-color: #a02020 transparent;
         }
         .tv-set.is-on .screen-content { opacity: 1; }
         .screen-content::-webkit-scrollbar { width: 6px; }
-        .screen-content::-webkit-scrollbar-thumb { background: #6b3a72; border-radius: 3px; }
+        .screen-content::-webkit-scrollbar-thumb { background: #a02020; border-radius: 3px; }
         .screen-content::-webkit-scrollbar-track { background: transparent; }
+        /* Program HTML ships fixed pixel widths (300px art boxes, 320px
+           containment units) that overflow the small tube, and terminal
+           <pre> lines that would clip. Pull them inside the tube. */
+        .screen-content > div { max-width: 100%; }
+        .screen-content [style*="width"] {
+            width: auto !important;
+            max-width: 100% !important;
+        }
+        .screen-content pre {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            font-size: 0.85em;
+        }
+        .screen-content canvas,
+        .screen-content img,
+        .screen-content table {
+            max-width: 100% !important;
+            height: auto !important;
+        }
 
         /* ═══ Effect layers — every one is inert to the pointer ═══ */
         .fx {
@@ -461,15 +480,15 @@
         /* ═══ On-screen display — drawn by the set, not the channel ═══ */
         .osd {
             position: absolute;
-            top: 20px;
-            right: 26px;
+            top: 6%;
+            right: 7%;
             z-index: 16;
             font-family: var(--font-screen);
-            font-size: 28px;
+            font-size: clamp(14px, 3.4vw, 24px);
             font-weight: bold;
             letter-spacing: 2px;
-            color: #8fffa8;
-            text-shadow: 0 0 6px rgba(60, 255, 120, 0.85), 0 0 18px rgba(60, 255, 120, 0.4);
+            color: #ff6b6b;
+            text-shadow: 0 0 6px rgba(255, 45, 45, 0.85), 0 0 18px rgba(255, 45, 45, 0.4);
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.4s ease;
@@ -494,12 +513,12 @@
             justify-content: center;
             gap: 6px;
             background: rgba(2, 2, 6, 0.9);
-            color: #9fe8b0;
+            color: #ff8a8a;
             font-family: var(--font-screen);
             font-size: 16px;
             letter-spacing: 2px;
             text-align: center;
-            text-shadow: 0 0 8px rgba(80, 255, 140, 0.6);
+            text-shadow: 0 0 8px rgba(255, 45, 45, 0.6);
             pointer-events: none;
         }
         .rebuffer.show { display: flex; }
@@ -529,7 +548,8 @@
         }
 
         /* ══════════════════════════════════════════════
-           CONTROL PANEL — the right-hand column of the set
+           CONTROL DECK — matches the pixel-TV frame:
+           gunmetal housing, hard pixel edges, red LEDs.
            ══════════════════════════════════════════════ */
         .control-panel {
             /* Image-frame mode: controls live below the PNG, full width */
@@ -541,12 +561,15 @@
             align-items: center;
             gap: 13px;
             padding: 14px 12px;
-            border-radius: 12px;
-            background: linear-gradient(168deg, #3e3a37, #2c2927 45%, #1b1918);
+            border-radius: 2px;
+            border: 3px solid #0a0c0e;
+            border-top: 3px solid #e02020;
+            background: linear-gradient(168deg, #2b3138, #1a1e23 45%, #101318);
             box-shadow:
-                inset 0 1px 0 rgba(255, 235, 215, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12),
                 inset 0 -2px 6px rgba(0, 0, 0, 0.7),
-                0 2px 5px rgba(0, 0, 0, 0.5);
+                0 4px 0 #0a0c0e,
+                0 6px 12px rgba(0, 0, 0, 0.6);
         }
         .control-panel .panel-readout { flex: 1 1 160px; }
         .control-panel .power-row,
@@ -558,17 +581,18 @@
 
         .panel-readout {
             padding: 7px 9px;
-            border-radius: 4px;
-            background: #0b0d0a;
-            box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 235, 215, 0.14);
+            border-radius: 2px;
+            border: 2px solid #0a0c0e;
+            background: #08090b;
+            box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 255, 255, 0.08);
             font-family: var(--font-screen);
             font-size: 13px;
             line-height: 1.35;
             letter-spacing: 1px;
-            color: #4a5a48;
+            color: #5a2323;
             transition: color 0.5s ease;
         }
-        .tv-set.is-on .panel-readout { color: #7dffa0; text-shadow: 0 0 6px rgba(80, 255, 130, 0.7); }
+        .tv-set.is-on .panel-readout { color: #ff4d4d; text-shadow: 0 0 6px rgba(255, 45, 45, 0.7); }
         .panel-readout .ch-num { font-size: 23px; font-weight: bold; display: block; line-height: 1; }
         .panel-readout .ch-name { display: block; font-size: 14px; letter-spacing: 2px; opacity: 0.95; }
         .panel-readout .sig { letter-spacing: 1px; font-size: 13px; display: block; margin-top: 1px; opacity: 0.8; }
@@ -576,10 +600,10 @@
         .panel-label {
             font-family: var(--font-panel);
             font-size: 11px;
-            letter-spacing: 0;
-            color: #b3a598;
+            letter-spacing: 2px;
+            color: #ff3b30;
             text-align: center;
-            opacity: 0.85;
+            opacity: 0.9;
             text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
             margin-bottom: -7px;
         }
@@ -592,28 +616,26 @@
             font-family: var(--font-panel);
             font-size: 12px;
             font-weight: 700;
-            color: #e2d6c8;
+            color: #ff6b6b;
             cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            background: linear-gradient(180deg, #5b5651 0%, #3e3a37 52%, #2d2a28 100%);
+            border: 2px solid #0a0c0e;
+            border-radius: 2px;
+            background: linear-gradient(180deg, #3a4149 0%, #23282e 52%, #16191d 100%);
             box-shadow:
-                inset 0 1px 0 rgba(255, 240, 225, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.18),
                 inset 0 -2px 4px rgba(0, 0, 0, 0.55),
-                0 4px 0 #1f1a19,
-                0 6px 9px rgba(0, 0, 0, 0.6);
+                0 4px 0 #0a0c0e;
             text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
             transition: transform 0.05s linear, box-shadow 0.05s linear;
         }
-        .pbtn:hover { background: linear-gradient(180deg, #6a645d, #47433f 52%, #35322f 100%); }
+        .pbtn:hover { background: linear-gradient(180deg, #454e58, #2b3138 52%, #1d2126 100%); }
         .pbtn:active, .pbtn.pressed {
             transform: translateY(4px);
             box-shadow:
                 inset 0 2px 6px rgba(0, 0, 0, 0.8),
-                0 0 0 #1f1a19,
-                0 1px 2px rgba(0, 0, 0, 0.5);
+                0 0 0 #0a0c0e;
         }
-        .pbtn:focus-visible { outline: 2px solid #ff69b4; outline-offset: 3px; }
+        .pbtn:focus-visible { outline: 2px solid #ff3b30; outline-offset: 3px; }
 
         /* ═══ Power button, with its own indicator lamp ═══ */
         .power-row { display: flex; align-items: center; gap: 10px; }
@@ -622,7 +644,11 @@
             padding: 11px 4px;
             font-size: 12px;
             letter-spacing: 1px;
+            color: #fff;
+            background: linear-gradient(180deg, #ff5252 0%, #c81e1e 52%, #8f1010 100%);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
         }
+        .pbtn-power:hover { background: linear-gradient(180deg, #ff6b6b, #d92d2d 52%, #a31212 100%); }
         .power-led {
             width: 11px;
             height: 11px;
@@ -645,13 +671,15 @@
             height: 54px;
             flex-shrink: 0;
             border-radius: 50%;
+            border: 2px solid #0a0c0e;
             cursor: grab;
             background:
-                radial-gradient(circle at 38% 30%, #6e6058 0%, #463c38 45%, #2b2422 78%, #1a1615 100%);
+                radial-gradient(circle at 38% 30%, #4a525b 0%, #2a2f36 45%, #1a1e23 78%, #0e1114 100%);
             box-shadow:
-                inset 0 2px 3px rgba(255, 240, 225, 0.28),
+                inset 0 2px 3px rgba(255, 255, 255, 0.18),
                 inset 0 -3px 6px rgba(0, 0, 0, 0.8),
-                0 4px 8px rgba(0, 0, 0, 0.7);
+                0 4px 0 #0a0c0e,
+                0 6px 10px rgba(0, 0, 0, 0.6);
             touch-action: none;
         }
         .knob:active { cursor: grabbing; }
@@ -675,8 +703,8 @@
             height: 17px;
             margin-left: -1.5px;
             border-radius: 2px;
-            background: linear-gradient(180deg, #ffeccc, #b89a72);
-            box-shadow: 0 0 4px rgba(255, 220, 160, 0.6);
+            background: linear-gradient(180deg, #ff6b6b, #c81e1e);
+            box-shadow: 0 0 4px rgba(255, 45, 45, 0.6);
             transform-origin: 50% 22px;
         }
         .knob-scale {
@@ -684,14 +712,14 @@
             font-size: 9px;
             line-height: 1.7;
             letter-spacing: 0;
-            color: #a8998c;
+            color: #9aa3ad;
             text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
             text-align: left;
             line-height: 1.6;
         }
         .knob-scale b {
             font-family: var(--font-screen);
-            color: #f4e8d8;
+            color: #ff6b6b;
             display: block;
             font-size: 17px;
             line-height: 1;
@@ -711,7 +739,7 @@
             font-size: 9px;
             line-height: 1.6;
             letter-spacing: 0;
-            color: #a8998c;
+            color: #9aa3ad;
             text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
             line-height: 1.25;
         }
@@ -721,27 +749,27 @@
             height: 19px;
             flex-shrink: 0;
             cursor: pointer;
-            border: none;
-            border-radius: 3px;
+            border: 2px solid #0a0c0e;
+            border-radius: 2px;
             padding: 0;
-            background: #14110f;
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 235, 215, 0.14);
+            background: #0c0e11;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 255, 255, 0.08);
         }
         .switch::after {
             content: '';
             position: absolute;
-            top: 2px;
-            left: 2px;
+            top: 1px;
+            left: 1px;
             width: 16px;
-            height: 15px;
+            height: 13px;
             border-radius: 2px;
-            background: linear-gradient(180deg, #6b645d, #3a3532);
-            box-shadow: inset 0 1px 0 rgba(255, 240, 225, 0.45), 0 1px 3px rgba(0, 0, 0, 0.8);
+            background: linear-gradient(180deg, #4a525b, #23282e);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 3px rgba(0, 0, 0, 0.8);
             transition: transform 0.13s ease;
         }
-        .switch[aria-pressed="true"]::after { transform: translateX(18px); }
-        .switch[aria-pressed="true"] { background: #3d1420; box-shadow: inset 0 2px 5px rgba(0,0,0,0.9), 0 0 7px rgba(255, 80, 120, 0.35); }
-        .switch:focus-visible { outline: 2px solid #ff69b4; outline-offset: 2px; }
+        .switch[aria-pressed="true"]::after { transform: translateX(16px); background: linear-gradient(180deg, #ff6b6b, #c81e1e); }
+        .switch[aria-pressed="true"] { background: #3d1010; box-shadow: inset 0 2px 5px rgba(0,0,0,0.9), 0 0 7px rgba(255, 45, 45, 0.4); }
+        .switch:focus-visible { outline: 2px solid #ff3b30; outline-offset: 2px; }
 
         /* ═══ Channel preset buttons ═══ */
         .presets {
@@ -755,33 +783,32 @@
             font-size: 17px;
             font-weight: 400;
             line-height: 1.1;
-            color: #d8ccbe;
+            color: #c8cfd6;
             cursor: pointer;
-            border: none;
-            border-radius: 3px;
-            background: linear-gradient(180deg, #4e4945 0%, #35322f 100%);
+            border: 2px solid #0a0c0e;
+            border-radius: 2px;
+            background: linear-gradient(180deg, #333a42 0%, #1e2329 100%);
             box-shadow:
-                inset 0 1px 0 rgba(255, 240, 225, 0.3),
-                0 3px 0 #1d1918,
-                0 4px 5px rgba(0, 0, 0, 0.5);
+                inset 0 1px 0 rgba(255, 255, 255, 0.15),
+                0 3px 0 #0a0c0e;
             text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
             transition: transform 0.05s linear, box-shadow 0.05s linear;
         }
-        .preset:hover { background: linear-gradient(180deg, #5d5751, #413d39); }
+        .preset:hover { background: linear-gradient(180deg, #3f4750, #272d34); color: #fff; }
         .preset:active {
             transform: translateY(3px);
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), 0 0 0 #1d1918;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), 0 0 0 #0a0c0e;
         }
         .preset.active {
-            color: #0d0d0d;
-            background: linear-gradient(180deg, #ffb0e0, #d060a8);
-            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+            color: #fff;
+            background: linear-gradient(180deg, #ff5252, #b31212);
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.6),
-                0 3px 0 #6b2a52,
-                0 0 12px rgba(255, 105, 180, 0.55);
+                inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                0 3px 0 #5c0a0a,
+                0 0 12px rgba(255, 45, 45, 0.55);
         }
-        .preset:focus-visible { outline: 2px solid #ff69b4; outline-offset: 2px; }
+        .preset:focus-visible { outline: 2px solid #ff3b30; outline-offset: 2px; }
 
         /* ══════════════════════════════════════════════
            CABINET FOOT — speaker grille + program plate
@@ -818,7 +845,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .program-plate .title { color: #dda0dd; }
+        .program-plate .title { color: #ff6b6b; }
         .program-plate .author { color: #7d7d7d; }
 
         /* ══════════════════════════════════════════════
@@ -911,10 +938,10 @@
         .submit-plate b {
             display: block;
             font-size: 11px;
-            color: #ffb0e0;
+            color: #ff6b6b;
             margin-bottom: 1px;
         }
-        .submit-plate:focus-visible { outline: 2px solid #ff69b4; outline-offset: 3px; }
+        .submit-plate:focus-visible { outline: 2px solid #ff3b30; outline-offset: 3px; }
 
         .hint {
             margin-top: 14px;
@@ -953,7 +980,7 @@
             .submit-plate { flex: 1 1 100%; }
             .tube { border-radius: 0; }
             .fx-curve, .fx-glare { border-radius: 0; }
-            .screen-content { padding: 16px 18px; font-size: 13px; }
+            .screen-content { padding: 3% 4%; font-size: 10px; }
 
             /* Fixed-pitch mask over small text washes it out — ease both off */
             .fx-phosphor { opacity: 0.4; }
