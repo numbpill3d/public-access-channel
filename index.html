@@ -69,7 +69,7 @@
            ══════════════════════════════════════════════ */
         .tv-set {
             width: 100%;
-            max-width: 980px;
+            max-width: 760px;
             position: relative;
         }
 
@@ -89,32 +89,44 @@
         .cabinet {
             position: relative;
             z-index: 1;
-            padding: 22px 22px 16px;
-            border-radius: 18px 18px 12px 12px;
-            background:
-                linear-gradient(178deg, #56524e 0%, #423e3b 7%, #2e2b29 24%, #262321 58%, #1c1a19 88%, #100f0e 100%);
-            box-shadow:
-                inset 0 2px 0 rgba(255, 225, 200, 0.22),
-                inset 0 -3px 8px rgba(0, 0, 0, 0.75),
-                inset 3px 0 6px rgba(0, 0, 0, 0.4),
-                inset -3px 0 6px rgba(0, 0, 0, 0.4),
-                0 26px 50px rgba(0, 0, 0, 0.85),
-                0 4px 0 #14100f;
+            /* Image-frame mode: the pixel-TV PNG is the cabinet now.
+               The old gradient cabinet is kept as a fallback behind it. */
+            padding: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
         }
         /* Injection-moulded plastic speckle */
         .cabinet::after {
             content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            pointer-events: none;
-            opacity: 0.5;
-            background-image:
-                repeating-linear-gradient(94deg, rgba(255,255,255,0.014) 0 2px, transparent 2px 5px),
-                repeating-linear-gradient(4deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 4px);
+            display: none;
         }
 
         .cabinet { position: relative; }
+
+        /* ══════════════════════════════════════════════
+           TV IMAGE STAGE — tv-frame.png is the cabinet.
+           .tube is absolutely positioned over the PNG's
+           black screen opening (measured from the source:
+           left 22.0%, top 37.16%, w 47.61%, h 37.24%).
+           ══════════════════════════════════════════════ */
+        .tv-stage {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            line-height: 0;
+        }
+        .tv-frame-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            pointer-events: none;
+            user-select: none;
+        }
 
         .cabinet-top {
             display: flex;
@@ -158,46 +170,47 @@
 
         .cabinet-main {
             display: flex;
+            flex-direction: column;
             gap: 18px;
             align-items: stretch;
         }
 
         /* ══════════════════════════════════════════════
-           BEZEL + TUBE
+           BEZEL + TUBE — tube floats over the PNG screen
            ══════════════════════════════════════════════ */
         .bezel {
-            flex: 1;
+            position: absolute;
+            left: 22.01%;
+            top: 37.16%;
+            width: 47.61%;
+            height: 37.24%;
             min-width: 0;
-            padding: 16px;
-            border-radius: 14px;
-            background: linear-gradient(170deg, #1b1918, #262322 40%, #121110);
-            box-shadow:
-                inset 0 3px 10px rgba(0, 0, 0, 0.95),
-                inset 0 -1px 0 rgba(255, 255, 255, 0.07),
-                0 1px 0 rgba(255, 230, 210, 0.12);
+            padding: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            line-height: normal;
         }
 
         .tube {
             position: relative;
-            aspect-ratio: 4 / 3;
             width: 100%;
+            height: 100%;
             overflow: hidden;
             background: #05060a;
-            /* Real CRT corners: the glass bulges, so the radius is large and uneven */
-            border-radius: 42px / 30px;
-            box-shadow:
-                inset 0 0 26px 12px rgba(0, 0, 0, 0.95),
-                inset 0 0 70px 22px rgba(0, 0, 0, 0.55),
-                0 0 0 2px #0b0909,
-                0 0 22px rgba(160, 70, 180, 0.22);
+            /* Pixel-TV screen has chamfered (octagon) corners */
+            border-radius: 0;
+            clip-path: polygon(
+                5.5% 0%, 94.5% 0%,
+                100% 8%, 100% 92%,
+                94.5% 100%, 5.5% 100%,
+                0% 92%, 0% 8%
+            );
+            box-shadow: none;
             transition: box-shadow 0.6s ease;
         }
         .tv-set.is-on .tube {
-            box-shadow:
-                inset 0 0 26px 12px rgba(0, 0, 0, 0.9),
-                inset 0 0 70px 22px rgba(0, 0, 0, 0.5),
-                0 0 0 2px #0b0909,
-                0 0 40px rgba(190, 90, 200, 0.4);
+            box-shadow: none;
         }
 
         /* Content sits at the bottom of the stack and stays interactive */
@@ -205,11 +218,11 @@
             position: absolute;
             inset: 0;
             z-index: 1;
-            padding: 26px 30px;
+            padding: 6% 7%;
             overflow-y: auto;
             overflow-x: hidden;
             font-family: var(--font-screen);
-            font-size: 15px;
+            font-size: clamp(11px, 1.8vw, 15px);
             line-height: 1.45;
             color: #e8e0e8;
             opacity: 0;
@@ -307,7 +320,7 @@
         /* Curved-glass shading: bright at the crown, dark where it turns away */
         .fx-curve {
             z-index: 14;
-            border-radius: 42px / 30px;
+            border-radius: 0;
             box-shadow:
                 inset 0 0 60px 30px rgba(0, 0, 0, 0.5),
                 inset 0 14px 28px -14px rgba(255, 255, 255, 0.11),
@@ -320,7 +333,7 @@
             background:
                 linear-gradient(148deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.035) 16%, transparent 34%),
                 radial-gradient(ellipse 34% 22% at 26% 15%, rgba(255, 255, 255, 0.07), transparent 70%);
-            border-radius: 42px / 30px;
+            border-radius: 0;
             mix-blend-mode: screen;
         }
 
@@ -519,10 +532,13 @@
            CONTROL PANEL — the right-hand column of the set
            ══════════════════════════════════════════════ */
         .control-panel {
-            width: 158px;
+            /* Image-frame mode: controls live below the PNG, full width */
+            width: 100%;
             flex-shrink: 0;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
             gap: 13px;
             padding: 14px 12px;
             border-radius: 12px;
@@ -532,6 +548,13 @@
                 inset 0 -2px 6px rgba(0, 0, 0, 0.7),
                 0 2px 5px rgba(0, 0, 0, 0.5);
         }
+        .control-panel .panel-readout { flex: 1 1 160px; }
+        .control-panel .power-row,
+        .control-panel .btn-row,
+        .control-panel .knob-wrap { flex: 1 1 160px; }
+        .control-panel .switch-row { flex: 0 1 auto; }
+        .control-panel .presets { flex: 1 1 100%; grid-template-columns: repeat(6, 1fr); }
+        .control-panel .tape-panel { flex: 1 1 100%; }
 
         .panel-readout {
             padding: 7px 9px;
@@ -916,9 +939,9 @@
            ══════════════════════════════════════════════ */
         @media (max-width: 720px) {
             body { padding: 12px 8px; }
-            .cabinet { padding: 14px 14px 12px; border-radius: 12px; }
+            .cabinet { padding: 0; }
             .cabinet-main { flex-direction: column; gap: 12px; }
-            .bezel { padding: 10px; }
+            .bezel { padding: 0; }
             .control-panel { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; }
             .panel-readout { flex: 1 1 100%; text-align: center; }
             .panel-label { display: none; }
@@ -928,8 +951,8 @@
             .speaker { width: 74px; height: 26px; }
             .cabinet-foot { flex-wrap: wrap; }
             .submit-plate { flex: 1 1 100%; }
-            .tube { border-radius: 26px / 20px; }
-            .fx-curve, .fx-glare { border-radius: 26px / 20px; }
+            .tube { border-radius: 0; }
+            .fx-curve, .fx-glare { border-radius: 0; }
             .screen-content { padding: 16px 18px; font-size: 13px; }
 
             /* Fixed-pitch mask over small text washes it out — ease both off */
@@ -975,7 +998,9 @@
 
             <div class="cabinet-main">
 
-                <!-- ═══ Picture tube ═══ -->
+                <!-- ═══ Picture tube over the pixel-TV image ═══ -->
+                <div class="tv-stage">
+                    <img class="tv-frame-img" src="tv-frame.png" alt="Pixel-art portable television frame" draggable="false">
                 <div class="bezel">
                     <div class="tube" id="tube">
                         <div class="screen-content" id="screen-content"></div>
@@ -1010,6 +1035,7 @@
 
                         <div class="fx fx-crush" id="crush"></div>
                     </div>
+                </div>
                 </div>
 
                 <!-- ═══ Control panel ═══ -->
