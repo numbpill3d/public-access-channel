@@ -548,19 +548,22 @@
         }
 
         /* ══════════════════════════════════════════════
-           CONTROL DECK — matches the pixel-TV frame:
-           gunmetal housing, hard pixel edges, red LEDs.
+           BROADCAST CONSOLE — three modules under the set:
+           TUNER · POWER/SOUND · ON AIR. Gunmetal housings,
+           hard pixel edges, one red accent line each.
            ══════════════════════════════════════════════ */
-        .control-panel {
-            /* Image-frame mode: controls live below the PNG, full width */
-            width: 100%;
-            flex-shrink: 0;
+        .deck {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr 1fr;
+            gap: 12px;
+            align-items: stretch;
+        }
+        .module {
             display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 13px;
-            padding: 14px 12px;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+            padding: 12px;
             border-radius: 2px;
             border: 3px solid #0a0c0e;
             border-top: 3px solid #e02020;
@@ -571,13 +574,40 @@
                 0 4px 0 #0a0c0e,
                 0 6px 12px rgba(0, 0, 0, 0.6);
         }
-        .control-panel .panel-readout { flex: 1 1 160px; }
-        .control-panel .power-row,
-        .control-panel .btn-row,
-        .control-panel .knob-wrap { flex: 1 1 160px; }
-        .control-panel .switch-row { flex: 0 1 auto; }
-        .control-panel .presets { flex: 1 1 100%; grid-template-columns: repeat(6, 1fr); }
-        .control-panel .tape-panel { flex: 1 1 100%; }
+        .mod-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            padding: 0 0 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+            font-family: var(--font-panel);
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: #9aa3ad;
+        }
+        .mod-tick {
+            width: 8px;
+            height: 8px;
+            flex-shrink: 0;
+            background: #e02020;
+            box-shadow: 0 0 6px rgba(255, 45, 45, 0.8);
+        }
+        .mod-tick.live { animation: liveblink 1.6s steps(2, start) infinite; }
+        @keyframes liveblink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.25; }
+        }
+        .etched {
+            margin: auto 0 0;
+            padding-top: 8px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            font-family: var(--font-panel);
+            font-size: 9px;
+            letter-spacing: 1px;
+            text-align: center;
+            color: #5b636d;
+        }
 
         .panel-readout {
             padding: 7px 9px;
@@ -596,17 +626,6 @@
         .panel-readout .ch-num { font-size: 23px; font-weight: bold; display: block; line-height: 1; }
         .panel-readout .ch-name { display: block; font-size: 14px; letter-spacing: 2px; opacity: 0.95; }
         .panel-readout .sig { letter-spacing: 1px; font-size: 13px; display: block; margin-top: 1px; opacity: 0.8; }
-
-        .panel-label {
-            font-family: var(--font-panel);
-            font-size: 11px;
-            letter-spacing: 2px;
-            color: #ff3b30;
-            text-align: center;
-            opacity: 0.9;
-            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
-            margin-bottom: -7px;
-        }
 
         /* ═══ Physical push-buttons ═══ */
         .btn-row { display: flex; gap: 9px; }
@@ -811,33 +830,15 @@
         .preset:focus-visible { outline: 2px solid #ff3b30; outline-offset: 2px; }
 
         /* ══════════════════════════════════════════════
-           CABINET FOOT — speaker grille + program plate
+           ON AIR module — now-playing strip, booking action,
+           key legend. Lives inside .module, so no outer chrome.
            ══════════════════════════════════════════════ */
-        .cabinet-foot {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-top: 14px;
-            padding: 0 4px;
-        }
-        .speaker {
-            flex-shrink: 0;
-            width: 128px;
-            height: 34px;
-            border-radius: 4px;
-            background:
-                repeating-linear-gradient(180deg, #121110 0px, #121110 2px, #34312e 2px, #34312e 4px);
-            box-shadow:
-                inset 0 2px 5px rgba(0, 0, 0, 0.9),
-                0 1px 0 rgba(255, 235, 215, 0.14);
-        }
         .program-plate {
-            flex: 1;
-            min-width: 0;
-            padding: 6px 12px;
-            border-radius: 3px;
-            background: linear-gradient(180deg, #1e1c1b, #141312);
-            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 235, 215, 0.12);
+            padding: 8px 10px;
+            border-radius: 2px;
+            border: 2px solid #0a0c0e;
+            background: #08090b;
+            box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.95);
             font-family: var(--font-screen);
             font-size: 15px;
             letter-spacing: 1px;
@@ -848,117 +849,64 @@
         .program-plate .title { color: #ff6b6b; }
         .program-plate .author { color: #7d7d7d; }
 
-        /* ══════════════════════════════════════════════
-           HANDMADE — masking tape, marker, and honest wear
-           ══════════════════════════════════════════════ */
-        .tape {
-            font-family: var(--font-hand);
-            color: #1c1712;
-            background: linear-gradient(172deg, #9c9179 0%, #8d8369 45%, #7d735c 100%);
-            /* Torn ends, so it reads as a piece someone tore off a roll */
-            clip-path: polygon(
-                3% 0%, 97% 2%, 100% 12%, 96% 26%, 100% 41%, 97% 58%,
-                100% 74%, 96% 88%, 98% 100%, 4% 98%, 0% 86%, 3% 68%,
-                0% 52%, 4% 34%, 0% 18%, 2% 8%
-            );
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
-            opacity: 0.82;
-            /* Fibrous paper texture */
-            background-image:
-                repeating-linear-gradient(97deg, rgba(255,255,255,0.16) 0 1px, transparent 1px 3px),
-                repeating-linear-gradient(4deg, rgba(90,70,40,0.09) 0 1px, transparent 1px 4px),
-                linear-gradient(172deg, #9c9179 0%, #8d8369 45%, #7d735c 100%);
-            pointer-events: none;
-            user-select: none;
-        }
-        .tape-panel {
-            margin-top: 10px;
-            padding: 9px 6px 10px;
-            font-size: 13px;
-            line-height: 1.25;
-            text-align: center;
-            transform: rotate(-1.6deg);
-        }
-        .tape-speaker {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            margin-top: -17px;
-            padding: 5px 9px 6px;
-            font-size: 11px;
-            line-height: 1.15;
-            text-align: center;
-            transform: rotate(-3.2deg);
-        }
-        .speaker { position: relative; }
-
-        /* Scuffs and scratches — thirty years of being shoved around a room */
-        .cabinet-wear {
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            pointer-events: none;
-            z-index: 2;
-            opacity: 0.5;
-            background:
-                linear-gradient(114deg, transparent 18%, rgba(255,235,210,0.05) 19%, transparent 20%),
-                linear-gradient(97deg, transparent 62%, rgba(255,235,210,0.035) 63%, transparent 64%),
-                linear-gradient(71deg, transparent 41%, rgba(0,0,0,0.16) 42%, transparent 43%),
-                linear-gradient(126deg, transparent 77%, rgba(255,235,210,0.03) 78%, transparent 79%),
-                radial-gradient(ellipse 22% 5% at 82% 96%, rgba(0,0,0,0.22), transparent 70%),
-                radial-gradient(ellipse 14% 4% at 12% 4%, rgba(255,230,200,0.05), transparent 70%);
-        }
-
-        /* ═══ Engraved plate: how to get on the air ═══ */
+        /* ═══ Booking action ═══ */
         .submit-plate {
-            flex-shrink: 0;
             display: block;
-            padding: 7px 13px 8px;
-            border-radius: 3px;
+            padding: 10px 13px 11px;
+            border-radius: 2px;
+            border: 2px solid #0a0c0e;
             font-family: var(--font-panel);
             font-size: 10px;
-            letter-spacing: 0;
+            letter-spacing: 1px;
             line-height: 1.5;
             text-align: center;
             text-decoration: none;
-            color: #c4b3a4;
-            background: linear-gradient(180deg, #46403c, #2e2a27);
+            color: #fff;
+            background: linear-gradient(180deg, #ff5252 0%, #c81e1e 52%, #8f1010 100%);
             box-shadow:
-                inset 0 1px 0 rgba(255, 240, 225, 0.28),
-                0 3px 0 #1b1817,
-                0 4px 6px rgba(0, 0, 0, 0.55);
-            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
-            transition: transform 0.05s linear, box-shadow 0.05s linear, color 0.15s;
+                inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                0 4px 0 #0a0c0e;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+            transition: transform 0.05s linear, box-shadow 0.05s linear, filter 0.15s;
         }
-        .submit-plate:hover { color: #ffc4ec; background: linear-gradient(180deg, #524a45, #37322e); }
+        .submit-plate:hover { filter: brightness(1.12); }
         .submit-plate:active {
-            transform: translateY(3px);
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), 0 0 0 #1b1817;
+            transform: translateY(4px);
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6), 0 0 0 #0a0c0e;
         }
         .submit-plate b {
             display: block;
             font-size: 11px;
-            color: #ff6b6b;
+            letter-spacing: 2px;
+            color: #fff;
             margin-bottom: 1px;
         }
         .submit-plate:focus-visible { outline: 2px solid #ff3b30; outline-offset: 3px; }
 
+        /* ═══ Key legend ═══ */
         .hint {
-            margin-top: 14px;
-            text-align: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+            justify-content: center;
+            margin: auto 0 0;
+            padding-top: 8px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
             font-family: var(--font-screen);
-            font-size: 16px;
+            font-size: 13px;
             letter-spacing: 1px;
-            color: #7d7168;
+            color: #7d8590;
         }
+        .hint span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
         .hint kbd {
             font-family: var(--font-panel);
-            font-size: 10px;
-            padding: 1px 5px;
+            font-size: 9px;
+            padding: 2px 5px;
             border-radius: 2px;
-            background: #262322;
-            color: #a89c92;
-            box-shadow: inset 0 1px 0 rgba(255, 235, 215, 0.14);
+            border: 1px solid #0a0c0e;
+            background: #1e2329;
+            color: #c8cfd6;
+            box-shadow: 0 2px 0 #0a0c0e;
         }
 
         /* ══════════════════════════════════════════════
@@ -969,15 +917,9 @@
             .cabinet { padding: 0; }
             .cabinet-main { flex-direction: column; gap: 12px; }
             .bezel { padding: 0; }
-            .control-panel { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; }
-            .panel-readout { flex: 1 1 100%; text-align: center; }
-            .panel-label { display: none; }
-            .btn-row, .power-row { flex: 1 1 46%; }
-            .knob-wrap { flex: 1 1 46%; }
-            .presets { flex: 1 1 100%; grid-template-columns: repeat(6, 1fr); }
-            .speaker { width: 74px; height: 26px; }
-            .cabinet-foot { flex-wrap: wrap; }
-            .submit-plate { flex: 1 1 100%; }
+            .deck { grid-template-columns: 1fr; }
+            .panel-readout { text-align: center; }
+            .presets { grid-template-columns: repeat(6, 1fr); }
             .tube { border-radius: 0; }
             .fx-curve, .fx-glare { border-radius: 0; }
             .screen-content { padding: 3% 4%; font-size: 10px; }
@@ -1002,6 +944,7 @@
         /* Respect users who don't want motion */
         @media (prefers-reduced-motion: reduce) {
             .fx-roll, .fx-scanlines { animation: none; }
+            .mod-tick.live { animation: none; }
             .tube.glitching .screen-content,
             .tube.g-slip .screen-content,
             .tube.g-jump .screen-content { animation: none; }
@@ -1016,7 +959,6 @@
 
     <div class="tv-set" id="tv-set">
         <div class="cabinet">
-            <div class="cabinet-wear"></div>
 
             <div class="cabinet-top">
                 <div class="brand">PUBLIC <span>ACCESS</span> CHANNELS</div>
@@ -1065,71 +1007,72 @@
                 </div>
                 </div>
 
-                <!-- ═══ Control panel ═══ -->
-                <div class="control-panel">
-                    <div class="panel-readout">
-                        <span class="ch-num" id="ch-num">CH--</span>
-                        <span class="ch-name" id="ch-name">STANDBY</span>
-                        <span class="sig" id="ch-sig">░░░░░</span>
-                    </div>
-
-                    <div class="power-row">
-                        <button class="pbtn pbtn-power" id="power-btn" aria-label="Power">POWER</button>
-                        <div class="power-led" id="power-led"></div>
-                    </div>
-
-                    <div class="panel-label">CHANNEL</div>
-                    <div class="btn-row">
-                        <button class="pbtn" id="prev-channel" aria-label="Previous channel">CH -</button>
-                        <button class="pbtn" id="next-channel" aria-label="Next channel">CH +</button>
-                    </div>
-
-                    <div class="panel-label">VOLUME</div>
-                    <div class="knob-wrap">
-                        <div class="knob" id="volume-knob" role="slider" tabindex="0"
-                             aria-label="Volume" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
-                            <div class="knob-pointer" id="knob-pointer"></div>
+                <!-- ═══ Broadcast console ═══ -->
+                <div class="deck">
+                    <section class="module mod-tuner" aria-label="Tuner">
+                        <h2 class="mod-head"><span class="mod-tick" aria-hidden="true"></span>TUNER</h2>
+                        <div class="panel-readout">
+                            <span class="ch-num" id="ch-num">CH--</span>
+                            <span class="ch-name" id="ch-name">STANDBY</span>
+                            <span class="sig" id="ch-sig">░░░░░</span>
                         </div>
-                        <div class="knob-scale">
-                            <b id="vol-readout">MUTE</b>
-                            drag<br>or scroll
+
+                        <div class="btn-row">
+                            <button class="pbtn" id="prev-channel" aria-label="Previous channel">CH -</button>
+                            <button class="pbtn" id="next-channel" aria-label="Next channel">CH +</button>
                         </div>
-                    </div>
 
-                    <div class="switch-row">
-                        <span class="sw-label">FLYBACK<br>15.7kHz</span>
-                        <button class="switch" id="whine-switch" type="button"
-                                aria-pressed="false" aria-label="Flyback tone"
-                                title="The 15.7kHz whine a real CRT makes. Off by default — many people find it painful."></button>
-                    </div>
+                        <div class="presets" id="presets"></div>
 
-                    <div class="panel-label">PRESET</div>
-                    <div class="presets" id="presets"></div>
+                        <p class="etched">ch.11 after midnight — trust me</p>
+                    </section>
 
-                    <div class="tape tape-panel">
-                        ch.11 after<br>midnight —<br>trust me
-                    </div>
+                    <section class="module mod-audio" aria-label="Power and sound">
+                        <h2 class="mod-head"><span class="mod-tick" aria-hidden="true"></span>POWER · SOUND</h2>
+                        <div class="power-row">
+                            <button class="pbtn pbtn-power" id="power-btn" aria-label="Power">POWER</button>
+                            <div class="power-led" id="power-led"></div>
+                        </div>
+
+                        <div class="knob-wrap">
+                            <div class="knob" id="volume-knob" role="slider" tabindex="0"
+                                 aria-label="Volume" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+                                <div class="knob-pointer" id="knob-pointer"></div>
+                            </div>
+                            <div class="knob-scale">
+                                <b id="vol-readout">MUTE</b>
+                                drag<br>or scroll
+                            </div>
+                        </div>
+
+                        <div class="switch-row">
+                            <span class="sw-label">FLYBACK<br>15.7kHz</span>
+                            <button class="switch" id="whine-switch" type="button"
+                                    aria-pressed="false" aria-label="Flyback tone"
+                                    title="The 15.7kHz whine a real CRT makes. Off by default — many people find it painful."></button>
+                        </div>
+                    </section>
+
+                    <section class="module mod-onair" aria-label="On air">
+                        <h2 class="mod-head"><span class="mod-tick live" aria-hidden="true"></span>ON AIR</h2>
+                        <div class="program-plate">
+                            <span class="title" id="prog-title">--:--</span>
+                            <span class="author"> by </span><span class="author" id="prog-author">unknown</span>
+                        </div>
+
+                        <a class="submit-plate" href="public_access_submit.html">
+                            <b>GET ON AIR</b>
+                            submit a program
+                        </a>
+
+                        <div class="hint">
+                            <span><kbd>L</kbd><kbd>R</kbd> tune</span>
+                            <span><kbd>0</kbd>–<kbd>9</kbd> channel</span>
+                            <span><kbd>P</kbd> power</span>
+                            <span><kbd>M</kbd> mute</span>
+                        </div>
+                    </section>
                 </div>
-            </div>
-
-            <!-- ═══ Speaker + now-playing plate ═══ -->
-            <div class="cabinet-foot">
-                <div class="speaker">
-                    <div class="tape tape-speaker">do not<br>adjust</div>
-                </div>
-                <div class="program-plate">
-                    <span class="title" id="prog-title">--:--</span>
-                    <span class="author"> by </span><span class="author" id="prog-author">unknown</span>
-                </div>
-
-                <a class="submit-plate" href="public_access_submit.html">
-                    <b>GET ON AIR</b>
-                    submit a program
-                </a>
-            </div>
-
-            <div class="hint">
-                <kbd>L</kbd> <kbd>R</kbd> tune &nbsp;·&nbsp; <kbd>0</kbd>–<kbd>9</kbd> key a channel &nbsp;·&nbsp; <kbd>P</kbd> power &nbsp;·&nbsp; <kbd>M</kbd> mute
             </div>
         </div>
     </div>
