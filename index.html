@@ -19,6 +19,8 @@
             --font-screen: 'VT323', 'MS Gothic', monospace;
             --font-panel: 'Silkscreen', 'VT323', monospace;
             --font-hand: 'Permanent Marker', 'Bradley Hand', cursive;
+            /* Early-00s desktop UI: Tahoma everywhere, pixels nowhere */
+            --font-ui: Tahoma, Verdana, Geneva, sans-serif;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { height: 100%; overflow-x: hidden; }
@@ -65,11 +67,13 @@
         }
 
         /* ══════════════════════════════════════════════
-           THE SET — physical cabinet
+           DESKTOP WINDOW — the whole station is an app:
+           XP-style title bar, beige cabinet body, sunken
+           status bar. border-color order is T R B L.
            ══════════════════════════════════════════════ */
         .tv-set {
             width: 100%;
-            max-width: 760px;
+            max-width: 780px;
             position: relative;
         }
 
@@ -86,23 +90,118 @@
         }
         .tv-set.is-on::before { opacity: 1; }
 
+        .win {
+            position: relative;
+            z-index: 1;
+            padding: 3px;
+            background: #ece9d8;
+            border: 2px solid;
+            border-color: #fff #716f64 #716f64 #fff;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 26px 50px rgba(0, 0, 0, 0.85);
+        }
+        .titlebar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 4px 4px 8px;
+            border-radius: 6px 6px 0 0;
+            background: linear-gradient(180deg, #0997ff 0%, #0053ee 8%, #0050e8 40%, #0646d8 88%, #003cb4 100%);
+            font-family: var(--font-ui);
+            font-size: 13px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 1px 1px 0 rgba(0, 0, 60, 0.8);
+            user-select: none;
+        }
+        .titlebar .rec {
+            width: 10px;
+            height: 10px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #ffb3b3, #e02020 55%, #7a0000);
+            border: 1px solid #4d0000;
+        }
+        .titlebar .tb-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .win-btns { display: flex; gap: 2px; }
+        .win-btns i {
+            width: 21px;
+            height: 21px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-style: normal;
+            font-family: var(--font-ui);
+            font-size: 11px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 1px 1px 0 rgba(0, 0, 60, 0.8);
+            background: linear-gradient(180deg, #3c8cf4 0%, #1663dd 45%, #0b4fc4 100%);
+            border: 1px solid #fff;
+            border-radius: 3px;
+            box-shadow: inset 0 0 0 1px rgba(0, 40, 120, 0.55);
+            cursor: default;
+        }
+        .win-btns i.x { background: linear-gradient(180deg, #f0957e 0%, #d94f1e 45%, #c23c0a 100%); }
+
+        /* News ticker under the title bar */
+        .ticker {
+            margin: 3px 0 0;
+            overflow: hidden;
+            white-space: nowrap;
+            background: #000;
+            border-top: 1px solid #716f64;
+            border-bottom: 1px solid #716f64;
+            font-family: var(--font-screen);
+            font-size: 15px;
+            letter-spacing: 2px;
+            color: #ffe14d;
+        }
+        .ticker span {
+            display: inline-block;
+            padding: 2px 0;
+            animation: tick 28s linear infinite;
+        }
+        @keyframes tick {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
         .cabinet {
             position: relative;
             z-index: 1;
-            /* Image-frame mode: the pixel-TV PNG is the cabinet now.
-               The old gradient cabinet is kept as a fallback behind it. */
-            padding: 0;
+            /* Window body: flat beige, the hardware photo + console sit in it */
+            padding: 12px;
             border-radius: 0;
-            background: transparent;
+            background: #ece9d8;
             box-shadow: none;
         }
-        /* Injection-moulded plastic speckle */
-        .cabinet::after {
-            content: '';
-            display: none;
-        }
 
-        .cabinet { position: relative; }
+        /* Sunken status bar along the bottom of the window */
+        .statusbar {
+            display: flex;
+            gap: 4px;
+            margin-top: 3px;
+            font-family: var(--font-ui);
+            font-size: 11px;
+            color: #222;
+        }
+        .sb-field {
+            padding: 3px 8px;
+            border: 1px solid;
+            border-color: #716f64 #fff #fff #716f64;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sb-field:first-child { flex: 1; min-width: 0; }
+        .sb-vis b {
+            font-family: var(--font-screen);
+            font-size: 14px;
+            font-weight: normal;
+            letter-spacing: 2px;
+            color: #7a0000;
+        }
 
         /* ══════════════════════════════════════════════
            TV IMAGE STAGE — tv-frame.png is the cabinet.
@@ -548,9 +647,9 @@
         }
 
         /* ══════════════════════════════════════════════
-           BROADCAST CONSOLE — three modules under the set:
-           TUNER · POWER/SOUND · ON AIR. Gunmetal housings,
-           hard pixel edges, one red accent line each.
+           BROADCAST CONSOLE — three dialog panels under the set:
+           TUNER · POWER/SOUND · ON AIR. Flat beige, bevelled
+           like a Win2K dialog, one navy title strip each.
            ══════════════════════════════════════════════ */
         .deck {
             display: grid;
@@ -561,60 +660,64 @@
         .module {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             min-width: 0;
-            padding: 12px;
-            border-radius: 2px;
-            border: 3px solid #0a0c0e;
-            border-top: 3px solid #e02020;
-            background: linear-gradient(168deg, #2b3138, #1a1e23 45%, #101318);
-            box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.12),
-                inset 0 -2px 6px rgba(0, 0, 0, 0.7),
-                0 4px 0 #0a0c0e,
-                0 6px 12px rgba(0, 0, 0, 0.6);
+            padding: 2px;
+            border-radius: 0;
+            border: 2px solid;
+            border-color: #fff #716f64 #716f64 #fff;
+            background: #ece9d8;
+            box-shadow: none;
         }
         .mod-head {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             margin: 0;
-            padding: 0 0 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.09);
-            font-family: var(--font-panel);
-            font-size: 10px;
-            letter-spacing: 3px;
-            color: #9aa3ad;
+            padding: 3px 6px;
+            background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+            font-family: var(--font-ui);
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #fff;
         }
+        .mod-onair .mod-head { background: linear-gradient(90deg, #7a0000 0%, #d02020 100%); }
         .mod-tick {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             flex-shrink: 0;
-            background: #e02020;
-            box-shadow: 0 0 6px rgba(255, 45, 45, 0.8);
+            background: #fff;
         }
         .mod-tick.live { animation: liveblink 1.6s steps(2, start) infinite; }
         @keyframes liveblink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.25; }
         }
+        .mod-body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 8px;
+        }
         .etched {
             margin: auto 0 0;
-            padding-top: 8px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.1);
-            font-family: var(--font-panel);
-            font-size: 9px;
-            letter-spacing: 1px;
+            padding: 8px 8px 2px;
+            border-top: 1px dotted #716f64;
+            font-family: var(--font-ui);
+            font-size: 10px;
+            font-style: italic;
             text-align: center;
-            color: #5b636d;
+            color: #4d545c;
         }
 
         .panel-readout {
             padding: 7px 9px;
-            border-radius: 2px;
-            border: 2px solid #0a0c0e;
+            border-radius: 0;
+            border: 2px solid;
+            border-color: #716f64 #fff #fff #716f64;
             background: #08090b;
-            box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 255, 255, 0.08);
+            box-shadow: none;
             font-family: var(--font-screen);
             font-size: 13px;
             line-height: 1.35;
@@ -627,47 +730,43 @@
         .panel-readout .ch-name { display: block; font-size: 14px; letter-spacing: 2px; opacity: 0.95; }
         .panel-readout .sig { letter-spacing: 1px; font-size: 13px; display: block; margin-top: 1px; opacity: 0.8; }
 
-        /* ═══ Physical push-buttons ═══ */
-        .btn-row { display: flex; gap: 9px; }
+        /* ═══ Raised buttons — classic outset, Tahoma labels ═══ */
+        .btn-row { display: flex; gap: 6px; }
         .pbtn {
             flex: 1;
-            padding: 12px 4px;
-            font-family: var(--font-panel);
-            font-size: 12px;
-            font-weight: 700;
-            color: #ff6b6b;
+            padding: 7px 4px;
+            font-family: var(--font-ui);
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
             cursor: pointer;
-            border: 2px solid #0a0c0e;
-            border-radius: 2px;
-            background: linear-gradient(180deg, #3a4149 0%, #23282e 52%, #16191d 100%);
-            box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.18),
-                inset 0 -2px 4px rgba(0, 0, 0, 0.55),
-                0 4px 0 #0a0c0e;
-            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
-            transition: transform 0.05s linear, box-shadow 0.05s linear;
+            border: 2px solid;
+            border-color: #fff #716f64 #716f64 #fff;
+            border-radius: 0;
+            background: #ece9d8;
+            box-shadow: none;
+            text-shadow: none;
         }
-        .pbtn:hover { background: linear-gradient(180deg, #454e58, #2b3138 52%, #1d2126 100%); }
+        .pbtn:hover { background: #f4f2e6; }
         .pbtn:active, .pbtn.pressed {
-            transform: translateY(4px);
-            box-shadow:
-                inset 0 2px 6px rgba(0, 0, 0, 0.8),
-                0 0 0 #0a0c0e;
+            transform: none;
+            border-color: #716f64 #fff #fff #716f64;
+            box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.25);
         }
-        .pbtn:focus-visible { outline: 2px solid #ff3b30; outline-offset: 3px; }
+        .pbtn:focus-visible { outline: 1px dotted #000; outline-offset: -5px; }
 
         /* ═══ Power button, with its own indicator lamp ═══ */
         .power-row { display: flex; align-items: center; gap: 10px; }
         .pbtn-power {
             flex: 1;
-            padding: 11px 4px;
-            font-size: 12px;
+            padding: 7px 4px;
+            font-size: 11px;
             letter-spacing: 1px;
             color: #fff;
-            background: linear-gradient(180deg, #ff5252 0%, #c81e1e 52%, #8f1010 100%);
-            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+            background: #c81e1e;
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
         }
-        .pbtn-power:hover { background: linear-gradient(180deg, #ff6b6b, #d92d2d 52%, #a31212 100%); }
+        .pbtn-power:hover { background: #d92d2d; }
         .power-led {
             width: 11px;
             height: 11px;
@@ -690,15 +789,14 @@
             height: 54px;
             flex-shrink: 0;
             border-radius: 50%;
-            border: 2px solid #0a0c0e;
+            border: 2px solid #716f64;
             cursor: grab;
             background:
-                radial-gradient(circle at 38% 30%, #4a525b 0%, #2a2f36 45%, #1a1e23 78%, #0e1114 100%);
+                radial-gradient(circle at 38% 30%, #ffffff 0%, #d4d0c8 45%, #a8a496 78%, #808080 100%);
             box-shadow:
-                inset 0 2px 3px rgba(255, 255, 255, 0.18),
-                inset 0 -3px 6px rgba(0, 0, 0, 0.8),
-                0 4px 0 #0a0c0e,
-                0 6px 10px rgba(0, 0, 0, 0.6);
+                inset 0 2px 3px rgba(255, 255, 255, 0.7),
+                inset 0 -3px 6px rgba(0, 0, 0, 0.3),
+                2px 2px 3px rgba(0, 0, 0, 0.3);
             touch-action: none;
         }
         .knob:active { cursor: grabbing; }
@@ -727,18 +825,18 @@
             transform-origin: 50% 22px;
         }
         .knob-scale {
-            font-family: var(--font-panel);
-            font-size: 9px;
+            font-family: var(--font-ui);
+            font-size: 10px;
             line-height: 1.7;
             letter-spacing: 0;
-            color: #9aa3ad;
-            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
+            color: #333;
+            text-shadow: none;
             text-align: left;
             line-height: 1.6;
         }
         .knob-scale b {
             font-family: var(--font-screen);
-            color: #ff6b6b;
+            color: #a31212;
             display: block;
             font-size: 17px;
             line-height: 1;
@@ -754,25 +852,27 @@
             padding: 0 2px;
         }
         .switch-row .sw-label {
-            font-family: var(--font-panel);
-            font-size: 9px;
+            font-family: var(--font-ui);
+            font-size: 10px;
+            font-weight: bold;
             line-height: 1.6;
             letter-spacing: 0;
-            color: #9aa3ad;
-            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
+            color: #333;
+            text-shadow: none;
             line-height: 1.25;
         }
         .switch {
             position: relative;
-            width: 38px;
-            height: 19px;
+            width: 40px;
+            height: 21px;
             flex-shrink: 0;
             cursor: pointer;
-            border: 2px solid #0a0c0e;
-            border-radius: 2px;
+            border: 2px solid;
+            border-color: #716f64 #fff #fff #716f64;
+            border-radius: 0;
             padding: 0;
-            background: #0c0e11;
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 255, 255, 0.08);
+            background: #fff;
+            box-shadow: none;
         }
         .switch::after {
             content: '';
@@ -781,14 +881,16 @@
             left: 1px;
             width: 16px;
             height: 13px;
-            border-radius: 2px;
-            background: linear-gradient(180deg, #4a525b, #23282e);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 3px rgba(0, 0, 0, 0.8);
+            border-radius: 0;
+            border: 2px solid;
+            border-color: #fff #716f64 #716f64 #fff;
+            background: #ece9d8;
+            box-shadow: none;
             transition: transform 0.13s ease;
         }
-        .switch[aria-pressed="true"]::after { transform: translateX(16px); background: linear-gradient(180deg, #ff6b6b, #c81e1e); }
-        .switch[aria-pressed="true"] { background: #3d1010; box-shadow: inset 0 2px 5px rgba(0,0,0,0.9), 0 0 7px rgba(255, 45, 45, 0.4); }
-        .switch:focus-visible { outline: 2px solid #ff3b30; outline-offset: 2px; }
+        .switch[aria-pressed="true"]::after { transform: translateX(14px); background: #c81e1e; }
+        .switch[aria-pressed="true"] { background: #fff; box-shadow: none; }
+        .switch:focus-visible { outline: 1px dotted #000; outline-offset: -5px; }
 
         /* ═══ Channel preset buttons ═══ */
         .presets {
@@ -797,37 +899,34 @@
             gap: 6px;
         }
         .preset {
-            padding: 6px 0 4px;
+            padding: 5px 0 4px;
             font-family: var(--font-screen);
             font-size: 17px;
             font-weight: 400;
             line-height: 1.1;
-            color: #c8cfd6;
+            color: #000;
             cursor: pointer;
-            border: 2px solid #0a0c0e;
-            border-radius: 2px;
-            background: linear-gradient(180deg, #333a42 0%, #1e2329 100%);
-            box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.15),
-                0 3px 0 #0a0c0e;
-            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
-            transition: transform 0.05s linear, box-shadow 0.05s linear;
+            border: 2px solid;
+            border-color: #fff #716f64 #716f64 #fff;
+            border-radius: 0;
+            background: #ece9d8;
+            box-shadow: none;
+            text-shadow: none;
         }
-        .preset:hover { background: linear-gradient(180deg, #3f4750, #272d34); color: #fff; }
+        .preset:hover { background: #f4f2e6; }
         .preset:active {
-            transform: translateY(3px);
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), 0 0 0 #0a0c0e;
+            transform: none;
+            border-color: #716f64 #fff #fff #716f64;
+            box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.25);
         }
         .preset.active {
             color: #fff;
-            background: linear-gradient(180deg, #ff5252, #b31212);
-            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-            box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.4),
-                0 3px 0 #5c0a0a,
-                0 0 12px rgba(255, 45, 45, 0.55);
+            background: #0a246a;
+            text-shadow: none;
+            border-color: #716f64 #fff #fff #716f64;
+            box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.4);
         }
-        .preset:focus-visible { outline: 2px solid #ff3b30; outline-offset: 2px; }
+        .preset:focus-visible { outline: 1px dotted #000; outline-offset: -5px; }
 
         /* ══════════════════════════════════════════════
            ON AIR module — now-playing strip, booking action,
@@ -835,10 +934,11 @@
            ══════════════════════════════════════════════ */
         .program-plate {
             padding: 8px 10px;
-            border-radius: 2px;
-            border: 2px solid #0a0c0e;
+            border-radius: 0;
+            border: 2px solid;
+            border-color: #716f64 #fff #fff #716f64;
             background: #08090b;
-            box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.95);
+            box-shadow: none;
             font-family: var(--font-screen);
             font-size: 15px;
             letter-spacing: 1px;
@@ -852,27 +952,26 @@
         /* ═══ Booking action ═══ */
         .submit-plate {
             display: block;
-            padding: 10px 13px 11px;
-            border-radius: 2px;
-            border: 2px solid #0a0c0e;
-            font-family: var(--font-panel);
-            font-size: 10px;
+            padding: 8px 13px 9px;
+            border-radius: 0;
+            border: 2px solid;
+            border-color: #ff8080 #7a0000 #7a0000 #ff8080;
+            font-family: var(--font-ui);
+            font-size: 11px;
+            font-weight: bold;
             letter-spacing: 1px;
             line-height: 1.5;
             text-align: center;
             text-decoration: none;
             color: #fff;
-            background: linear-gradient(180deg, #ff5252 0%, #c81e1e 52%, #8f1010 100%);
-            box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.4),
-                0 4px 0 #0a0c0e;
-            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
-            transition: transform 0.05s linear, box-shadow 0.05s linear, filter 0.15s;
+            background: #c81e1e;
+            box-shadow: none;
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
         }
-        .submit-plate:hover { filter: brightness(1.12); }
+        .submit-plate:hover { background: #d92d2d; }
         .submit-plate:active {
-            transform: translateY(4px);
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6), 0 0 0 #0a0c0e;
+            transform: none;
+            border-color: #7a0000 #ff8080 #ff8080 #7a0000;
         }
         .submit-plate b {
             display: block;
@@ -881,7 +980,7 @@
             color: #fff;
             margin-bottom: 1px;
         }
-        .submit-plate:focus-visible { outline: 2px solid #ff3b30; outline-offset: 3px; }
+        .submit-plate:focus-visible { outline: 1px dotted #fff; outline-offset: -5px; }
 
         /* ═══ Key legend ═══ */
         .hint {
@@ -891,33 +990,37 @@
             justify-content: center;
             margin: auto 0 0;
             padding-top: 8px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.1);
-            font-family: var(--font-screen);
-            font-size: 13px;
-            letter-spacing: 1px;
-            color: #7d8590;
+            border-top: 1px dotted #716f64;
+            font-family: var(--font-ui);
+            font-size: 11px;
+            letter-spacing: 0;
+            color: #333;
         }
         .hint span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
         .hint kbd {
-            font-family: var(--font-panel);
-            font-size: 9px;
-            padding: 2px 5px;
-            border-radius: 2px;
-            border: 1px solid #0a0c0e;
-            background: #1e2329;
-            color: #c8cfd6;
-            box-shadow: 0 2px 0 #0a0c0e;
+            font-family: var(--font-ui);
+            font-size: 10px;
+            font-weight: bold;
+            padding: 1px 5px;
+            border-radius: 0;
+            border: 1px solid #716f64;
+            background: #fff;
+            color: #000;
+            box-shadow: 1px 1px 0 #716f64;
         }
 
         /* ══════════════════════════════════════════════
-           NARROW SCREENS — panel drops below the tube
+           NARROW SCREENS — console stacks under the set
            ══════════════════════════════════════════════ */
         @media (max-width: 720px) {
             body { padding: 12px 8px; }
-            .cabinet { padding: 0; }
+            .cabinet { padding: 8px; }
             .cabinet-main { flex-direction: column; gap: 12px; }
             .bezel { padding: 0; }
             .deck { grid-template-columns: 1fr; }
+            .titlebar { font-size: 11px; }
+            .ticker { font-size: 13px; }
+            .statusbar { flex-wrap: wrap; }
             .panel-readout { text-align: center; }
             .presets { grid-template-columns: repeat(6, 1fr); }
             .tube { border-radius: 0; }
@@ -944,7 +1047,7 @@
         /* Respect users who don't want motion */
         @media (prefers-reduced-motion: reduce) {
             .fx-roll, .fx-scanlines { animation: none; }
-            .mod-tick.live { animation: none; }
+            .ticker span, .mod-tick.live { animation: none; }
             .tube.glitching .screen-content,
             .tube.g-slip .screen-content,
             .tube.g-jump .screen-content { animation: none; }
@@ -958,7 +1061,14 @@
     <div class="bg-veil" aria-hidden="true"></div>
 
     <div class="tv-set" id="tv-set">
-        <div class="cabinet">
+        <div class="win">
+            <div class="titlebar">
+                <span class="rec" aria-hidden="true"></span>
+                <span class="tb-title">PUBLIC ACCESS CHANNELS — PAC-11</span>
+                <span class="win-btns" aria-hidden="true"><i>_</i><i>▢</i><i class="x">×</i></span>
+            </div>
+            <div class="ticker" aria-hidden="true"><span>+++ PUBLIC ACCESS CHANNELS +++ NOW SHOWING: JOURNALS · ART · COMPUTERS · PERSONAL · UNKNOWN +++ CH.11 AFTER MIDNIGHT — TRUST ME +++ GET ON AIR: SUBMIT A PROGRAM +++&nbsp;</span></div>
+            <div class="cabinet">
 
             <div class="cabinet-top">
                 <div class="brand">PUBLIC <span>ACCESS</span> CHANNELS</div>
@@ -1011,76 +1121,100 @@
                 <div class="deck">
                     <section class="module mod-tuner" aria-label="Tuner">
                         <h2 class="mod-head"><span class="mod-tick" aria-hidden="true"></span>TUNER</h2>
-                        <div class="panel-readout">
-                            <span class="ch-num" id="ch-num">CH--</span>
-                            <span class="ch-name" id="ch-name">STANDBY</span>
-                            <span class="sig" id="ch-sig">░░░░░</span>
+                        <div class="mod-body">
+                            <div class="panel-readout">
+                                <span class="ch-num" id="ch-num">CH--</span>
+                                <span class="ch-name" id="ch-name">STANDBY</span>
+                                <span class="sig" id="ch-sig">░░░░░</span>
+                            </div>
+
+                            <div class="btn-row">
+                                <button class="pbtn" id="prev-channel" aria-label="Previous channel">CH -</button>
+                                <button class="pbtn" id="next-channel" aria-label="Next channel">CH +</button>
+                            </div>
+
+                            <div class="presets" id="presets"></div>
+
+                            <p class="etched">ch.11 after midnight — trust me</p>
                         </div>
-
-                        <div class="btn-row">
-                            <button class="pbtn" id="prev-channel" aria-label="Previous channel">CH -</button>
-                            <button class="pbtn" id="next-channel" aria-label="Next channel">CH +</button>
-                        </div>
-
-                        <div class="presets" id="presets"></div>
-
-                        <p class="etched">ch.11 after midnight — trust me</p>
                     </section>
 
                     <section class="module mod-audio" aria-label="Power and sound">
                         <h2 class="mod-head"><span class="mod-tick" aria-hidden="true"></span>POWER · SOUND</h2>
-                        <div class="power-row">
-                            <button class="pbtn pbtn-power" id="power-btn" aria-label="Power">POWER</button>
-                            <div class="power-led" id="power-led"></div>
-                        </div>
-
-                        <div class="knob-wrap">
-                            <div class="knob" id="volume-knob" role="slider" tabindex="0"
-                                 aria-label="Volume" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
-                                <div class="knob-pointer" id="knob-pointer"></div>
+                        <div class="mod-body">
+                            <div class="power-row">
+                                <button class="pbtn pbtn-power" id="power-btn" aria-label="Power">POWER</button>
+                                <div class="power-led" id="power-led"></div>
                             </div>
-                            <div class="knob-scale">
-                                <b id="vol-readout">MUTE</b>
-                                drag<br>or scroll
-                            </div>
-                        </div>
 
-                        <div class="switch-row">
-                            <span class="sw-label">FLYBACK<br>15.7kHz</span>
-                            <button class="switch" id="whine-switch" type="button"
-                                    aria-pressed="false" aria-label="Flyback tone"
-                                    title="The 15.7kHz whine a real CRT makes. Off by default — many people find it painful."></button>
+                            <div class="knob-wrap">
+                                <div class="knob" id="volume-knob" role="slider" tabindex="0"
+                                     aria-label="Volume" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+                                    <div class="knob-pointer" id="knob-pointer"></div>
+                                </div>
+                                <div class="knob-scale">
+                                    <b id="vol-readout">MUTE</b>
+                                    drag<br>or scroll
+                                </div>
+                            </div>
+
+                            <div class="switch-row">
+                                <span class="sw-label">FLYBACK<br>15.7kHz</span>
+                                <button class="switch" id="whine-switch" type="button"
+                                        aria-pressed="false" aria-label="Flyback tone"
+                                        title="The 15.7kHz whine a real CRT makes. Off by default — many people find it painful."></button>
+                            </div>
                         </div>
                     </section>
 
                     <section class="module mod-onair" aria-label="On air">
                         <h2 class="mod-head"><span class="mod-tick live" aria-hidden="true"></span>ON AIR</h2>
-                        <div class="program-plate">
-                            <span class="title" id="prog-title">--:--</span>
-                            <span class="author"> by </span><span class="author" id="prog-author">unknown</span>
-                        </div>
+                        <div class="mod-body">
+                            <div class="program-plate">
+                                <span class="title" id="prog-title">--:--</span>
+                                <span class="author"> by </span><span class="author" id="prog-author">unknown</span>
+                            </div>
 
-                        <a class="submit-plate" href="public_access_submit.html">
-                            <b>GET ON AIR</b>
-                            submit a program
-                        </a>
+                            <a class="submit-plate" href="public_access_submit.html">
+                                <b>GET ON AIR</b>
+                                submit a program
+                            </a>
 
-                        <div class="hint">
-                            <span><kbd>L</kbd><kbd>R</kbd> tune</span>
-                            <span><kbd>0</kbd>–<kbd>9</kbd> channel</span>
-                            <span><kbd>P</kbd> power</span>
-                            <span><kbd>M</kbd> mute</span>
+                            <div class="hint">
+                                <span><kbd>L</kbd><kbd>R</kbd> tune</span>
+                                <span><kbd>0</kbd>–<kbd>9</kbd> channel</span>
+                                <span><kbd>P</kbd> power</span>
+                                <span><kbd>M</kbd> mute</span>
+                            </div>
                         </div>
                     </section>
                 </div>
+            </div><!-- /.cabinet-main -->
+            </div><!-- /.cabinet -->
+            <div class="statusbar">
+                <span class="sb-field">SIGNAL ▂▄▆●○&nbsp;&nbsp;MODEL PAC-11 · SOLID STATE</span>
+                <span class="sb-field sb-vis">VISITORS <b id="visits">001337</b></span>
             </div>
-        </div>
-    </div>
+        </div><!-- /.win -->
+    </div><!-- /.tv-set -->
 
     <!-- Three.js for NHI pet (loaded from CDN, same as nolove.neocities.org) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- Channel data -->
     <script src="public_access_channels.js"></script>
+
+    <!-- Visitor counter for the status bar. Starts at the station's
+         legendary hit count and ticks up once per visit on this machine. -->
+    <script>
+    (function () {
+        try {
+            var n = parseInt(localStorage.getItem('pac-visits') || '1336', 10) + 1;
+            localStorage.setItem('pac-visits', String(n));
+            var el = document.getElementById('visits');
+            if (el) el.textContent = String(n).padStart(6, '0');
+        } catch (e) { /* private mode: the printed 001337 stands */ }
+    })();
+    </script>
 
     <!-- ═══════════════════════════════════════════════════════
          CRT: the set itself — sound, static, power, tuning feel
