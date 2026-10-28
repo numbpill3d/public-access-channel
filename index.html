@@ -1149,7 +1149,7 @@
                         <h2 class="mod-head"><span class="mod-tick" aria-hidden="true"></span>POWER · SOUND</h2>
                         <div class="mod-body">
                             <div class="power-row">
-                                <button class="pbtn pbtn-power" id="power-btn" aria-label="Power">POWER</button>
+                                <button class="pbtn pbtn-power" id="power-btn" aria-label="Power" aria-pressed="false">POWER</button>
                                 <div class="power-led" id="power-led"></div>
                             </div>
 
@@ -1824,6 +1824,7 @@
         function powerOn(firstBoot) {
             if (powered) return;
             powered = true;
+            $powerBtn.setAttribute('aria-pressed', 'true');
 
             CRT.unlock();
             CRT.playClunk(true);
@@ -1853,6 +1854,7 @@
         function powerOff() {
             if (!powered) return;
             powered = false;
+            $powerBtn.setAttribute('aria-pressed', 'false');
 
             CRT.playClunk(false);
             CRT.staticOff();
